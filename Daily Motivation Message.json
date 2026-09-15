@@ -1,0 +1,132 @@
+{
+  "name": "Daily Motivation Message",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b95b5b38-3a7f-47ab-9bdb-d6d74de05bc9",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Generate a short and inspiring daily motivational message for today. Encourage the user to stay focused, consistent, positive, and productive. Use simple, natural language and add 1-2 suitable emojis. Return only the motivational message.",
+        "options": {
+          "systemMessage": "You are a Daily Motivation Assistant.\n\nGenerate one short, positive, and inspiring motivational message.\n\nKeep it natural, encouraging, and suitable for the user.\nFocus on productivity, consistency, confidence, learning, and personal growth.\nUse simple language.\nKeep the message short.\nUse 1-2 suitable emojis.\nReturn only the motivational message."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "7b1f7e5d-ce60-4719-bfcd-87ed63d7f26b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        208
+      ],
+      "id": "bf18b979-f947-4f06-a9d2-d946b22fbc86",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        0
+      ],
+      "id": "6b1ac847-cdcb-4c00-bad9-a5d96f9cf808",
+      "name": "Send a text message",
+      "webhookId": "5b6fb2f3-834a-4447-8ed1-cd88b01e2314",
+      "credentials": {
+        "telegramApi": {
+          "id": "m17TrAeYPacm4zLN",
+          "name": "agent4_dm"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9376c2f6-33cb-4b30-bb7e-1f179f99ade6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "WboyR2LloUzR0xjB",
+  "tags": []
+}

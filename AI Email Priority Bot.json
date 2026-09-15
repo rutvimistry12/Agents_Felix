@@ -1,0 +1,239 @@
+{
+  "name": "AI Email Priority Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -544,
+        -32
+      ],
+      "id": "39a6772b-0f40-47fa-9074-dab63008ea30",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zSsVwVZiAzpF61qb",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        -32
+      ],
+      "id": "7be08f1d-b130-45fc-b146-6b62d24130d9",
+      "name": "Get a message",
+      "webhookId": "7ceb9a72-3d19-42aa-ae2d-e10fafcbe2f3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zSsVwVZiAzpF61qb",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the incoming email and determine its priority.\n\nYou must classify the email into exactly one of these priority levels:\n- High\n- Medium\n- Low\n\nConsider the following factors:\n- Sender\n- Subject\n- Email content\n- Urgency\n- Deadlines\n- Required action\n- Importance of the request\n\nReturn ONLY valid JSON.\nDo not return markdown.\nDo not add ```json.\nDo not add any explanation outside the JSON.\n\nThe JSON must follow exactly this structure:\n\n{\n  \"priority\": \"High\",\n  \"reason\": \"Short explanation of why this priority was selected\",\n  \"action_required\": \"Yes\",\n  \"suggested_action\": \"Short recommended action\"\n}\n\nRules:\n- \"priority\" must be exactly \"High\", \"Medium\", or \"Low\".\n- \"action_required\" must be exactly \"Yes\" or \"No\".\n- \"reason\" must be a short explanation.\n- \"suggested_action\" must be a short practical recommendation.\n- If no action is required, set \"action_required\" to \"No\" and explain what the user should do, such as \"No action required\" or \"Keep for reference\".\n- Always return valid JSON, even if the email content is empty or unclear.\n\nHere is the incoming email:\n\nEmail Content:\n{{$json.snippet}}\n\nSubject:\n{{$json.subject}}\n\nEmail Content:\n{{$json.text}}",
+        "options": {
+          "systemMessage": "You are an AI Email Priority Assistant.\n\nYour job is to analyze incoming emails and determine their priority based on the sender, subject, email content, urgency, deadlines, importance, and required action.\n\nClassify every email into exactly one of these priority levels:\n\n1. HIGH — Urgent emails, critical issues, important deadlines, immediate action required, or emails from managers/clients regarding time-sensitive work.\n2. MEDIUM — Important emails that require attention or a response but are not immediately urgent.\n3. LOW — Informational emails, newsletters, general updates, advertisements, or emails that do not require immediate action.\n\nFor every email, provide the result in exactly this format:\n\nPriority: High/Medium/Low\nReason: Brief explanation of why this priority was assigned.\nAction Required: Yes/No\nSuggested Action: Brief recommended next step.\n\nDo not invent information that is not present in the email.\nKeep the response professional, concise, and easy to understand."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -96,
+        -32
+      ],
+      "id": "a9d236fc-6543-4351-806f-fd205d1be1d3",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        176
+      ],
+      "id": "e7138a10-e7be-455c-bc9e-d24de7c0c4a6",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $json.output;\n\nlet parsed;\n\ntry {\n  parsed = typeof output === \"string\"\n    ? JSON.parse(output)\n    : output;\n} catch (error) {\n  throw new Error(\"AI Agent returned invalid JSON: \" + output);\n}\n\n// Get original Gmail data\nconst email = $('Get a message').first().json;\n\n// Get sender and subject directly from Gmail output\nconst from = email.From || \"Unknown sender\";\nconst subject = email.Subject || \"No subject\";\n\nreturn [\n  {\n    json: {\n      from: from,\n      subject: subject,\n      priority: parsed.priority || \"Low\",\n      reason: parsed.reason || \"No reason provided\",\n      action_required: parsed.action_required || \"No\",\n      suggested_action: parsed.suggested_action || \"No action required\"\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -32
+      ],
+      "id": "18fca0f5-a702-4d7d-8bd8-169e00c9f694",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5cdc55dd-cb34-4e38-9077-290957d4dad9",
+              "leftValue": "={{ $json.priority }}",
+              "rightValue": "High",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        -32
+      ],
+      "id": "a7a6c20a-1d1d-4f24-abf9-7935dd6af926",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=🚨 EMAIL PRIORITY ALERT \n📧 Subject: {{$json.subject}}\n👤 From: {{$json.from}} \n🔴 Priority: {{$json.priority}}  \n⚡ Action Required: {{$json.action_required}} \n📝 Reason: {{$json.reason}}\n👉 Suggested Action: {{$json.suggested_action}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        -128
+      ],
+      "id": "fd27dd8f-7c5f-4b32-b0b1-4120cd1e9ad6",
+      "name": "Send a text message",
+      "webhookId": "2433d1ca-19a7-41b2-88ed-1e815b1b96d9",
+      "credentials": {
+        "telegramApi": {
+          "id": "fFESTKCmyUcnHWwq",
+          "name": "agent8email"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a message": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0a547568-212c-45a0-9b06-999c2affd5d3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "qHLoxg3cuTbzsftg",
+  "tags": []
+}

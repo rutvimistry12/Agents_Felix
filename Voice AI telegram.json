@@ -1,0 +1,242 @@
+{
+  "name": "Voice AI telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "31522848-dea0-4ca5-9aaa-0bae06884221",
+      "name": "Telegram Trigger",
+      "webhookId": "831b67b5-b431-447f-a35b-b91e76a5b392",
+      "credentials": {
+        "telegramApi": {
+          "id": "jpFJladWjhu82Wpx",
+          "name": "voice ai agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "2b2cd96e-95b7-442b-80cd-0a526151c428",
+      "name": "Get a file",
+      "webhookId": "067be81a-380b-4d3d-9820-eb73d1104333",
+      "credentials": {
+        "telegramApi": {
+          "id": "jpFJladWjhu82Wpx",
+          "name": "voice ai agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "speech",
+        "operation": "speechToText",
+        "additionalOptions": {},
+        "requestOptions": {}
+      },
+      "type": "@elevenlabs/n8n-nodes-elevenlabs.elevenLabs",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "9b7a0506-ad57-44fd-9558-e670d65be3bb",
+      "name": "Transcribe audio or video",
+      "credentials": {
+        "elevenLabsApi": {
+          "id": "4PhNSebC5OCB6RFA",
+          "name": "ElevenLabs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "You are VoiceGPT, a helpful, intelligent, and friendly AI voice assistant.\n\nYour main goal is to understand the user's spoken request and provide a clear, useful, and natural response.\n\n## Voice Conversation Rules\n\n* Speak naturally, like a helpful human assistant.\n* Keep responses concise and easy to understand.\n* Prefer short sentences because your responses will be spoken aloud.\n* Do not use unnecessary headings, markdown, tables, emojis, or long explanations during voice conversations.\n* Avoid repeating the user's question unless clarification is needed.\n* Do not sound robotic, overly formal, or scripted.\n* Use simple and conversational language.\n* If the user interrupts or changes the topic, immediately follow the new request.\n* Ask only one clarification question at a time when necessary.\n\n## Understanding the User\n\n* Carefully understand the user's intent before responding.\n* If the request is clear, answer directly without asking unnecessary questions.\n* If important information is missing, ask a short clarification question.\n* If the user's speech is unclear, politely ask them to repeat or clarify.\n* Never assume critical information that the user has not provided.\n\n## Answering Questions\n\n* Give accurate and practical answers.\n* For simple questions, give a short answer.\n* For complex questions, explain the answer step by step, but keep each step concise.\n* If you are unsure about something, clearly say that you are unsure instead of inventing information.\n* Never make up facts, names, prices, dates, or results.\n\n## Voice-Friendly Formatting\n\nSince your response will be converted to speech:\n\n* Do not use markdown tables.\n* Do not use long bullet lists unless necessary.\n* Avoid complicated symbols.\n* Write numbers and abbreviations in a way that is easy to pronounce.\n* Use natural pauses through normal punctuation.\n* Keep most responses under 100–150 words unless the user asks for a detailed explanation.\n\n## Conversation Style\n\nBe:\n\n* Friendly\n* Professional\n* Patient\n* Helpful\n* Concise\n* Context-aware\n\nMatch the user's communication style when appropriate.\n\nIf the user says \"hello\", greet them naturally and ask how you can help.\n\nIf the user says goodbye, respond briefly and politely.\n\n## Safety\n\nDo not provide instructions that could seriously harm people, enable illegal activity, or compromise someone's privacy or security.\n\nFor medical, legal, financial, or other high-impact topics, provide general information and clearly recommend consulting an appropriate qualified professional when necessary.\n\n## Important Rule\n\nYour job is not just to answer questions. Your job is to have a natural voice conversation, understand what the user wants, and help them complete their task as efficiently as possible.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "ac6892d7-f61e-4db2-805d-23aab0073eff",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        544,
+        208
+      ],
+      "id": "6d5583e6-525b-418b-b9cc-ab48919a0cae",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "speech",
+        "voice": {
+          "__rl": true,
+          "value": "hpp4J3VqNfWAUOO0d1Us",
+          "mode": "list",
+          "cachedResultName": "Bella - Professional, Bright, Warm"
+        },
+        "text": "={{ $json.output }}",
+        "additionalOptions": {},
+        "requestOptions": {}
+      },
+      "type": "@elevenlabs/n8n-nodes-elevenlabs.elevenLabs",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "8f6ffb13-9153-4b6a-935d-dea79002d851",
+      "name": "Convert text to speech",
+      "credentials": {
+        "elevenLabsApi": {
+          "id": "4PhNSebC5OCB6RFA",
+          "name": "ElevenLabs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAudio",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "ce25da69-c17e-4971-8d9b-2160fc6c9540",
+      "name": "Send an audio file",
+      "webhookId": "e024a5e0-6520-40a9-b8ab-320d5f24d604",
+      "credentials": {
+        "telegramApi": {
+          "id": "jpFJladWjhu82Wpx",
+          "name": "voice ai agent"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Transcribe audio or video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe audio or video": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Convert text to speech",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert text to speech": {
+      "main": [
+        [
+          {
+            "node": "Send an audio file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0395eaf3-04bb-4742-98a9-34181230a73d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "AH71LDIcI71DQEeP",
+  "tags": []
+}

@@ -1,0 +1,582 @@
+{
+  "name": "AI Invoice Analyzer",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -576,
+        -16
+      ],
+      "id": "ad42d37f-f5c4-42e4-be75-7e89d288141a",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XvqeA5UsjNVvSIqO",
+          "name": "Gmail account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "Picture1.jpg",
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -352,
+        -16
+      ],
+      "id": "86deaa85-8113-4f47-84dd-fd820a6ffa29",
+      "name": "Get a message",
+      "webhookId": "a90f81c0-a3a7-48c7-891f-f85fe9d16fb0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XvqeA5UsjNVvSIqO",
+          "name": "Gmail account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite"
+        },
+        "text": "Extract invoice details from the provided image/document.\n\nReturn ONLY valid JSON. Do not add markdown, explanations, or ```json.\n\nUse exactly this structure:\n\n{\n  \"seller\": {\n    \"company_name\": \"\",\n    \"address\": \"\",\n    \"gstin\": \"\",\n    \"email\": \"\",\n    \"phone\": \"\"\n  },\n  \"invoice\": {\n    \"invoice_number\": \"\",\n    \"invoice_date\": \"\",\n    \"due_date\": \"\"\n  },\n  \"customer\": {\n    \"name\": \"\",\n    \"address\": \"\",\n    \"gstin\": \"\"\n  },\n  \"items\": [\n    {\n      \"item_name\": \"\",\n      \"quantity\": \"\",\n      \"rate\": \"\",\n      \"amount\": \"\"\n    }\n  ],\n  \"totals\": {\n    \"subtotal\": \"\",\n    \"discount\": \"\",\n    \"cgst\": \"\",\n    \"sgst\": \"\",\n    \"igst\": \"\",\n    \"grand_total\": \"\",\n    \"amount_in_words\": \"\"\n  },\n  \"payment\": {\n    \"bank_name\": \"\",\n    \"account_name\": \"\",\n    \"account_number\": \"\",\n    \"ifsc\": \"\",\n    \"payment_terms\": \"\"\n  }\n}\n\nRules:\n- Extract only information that is actually visible in the document.\n- If a field is missing, use \"Not Found\".\n- Do not guess or invent information.\n- Keep amounts as they appear in the document.\n- Return valid JSON only.",
+        "inputType": "binary",
+        "binaryPropertyName": "Picture1.jpg0",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -128,
+        -16
+      ],
+      "id": "ec2f4f78-260b-4e07-a115-5fd7854fbe35",
+      "name": "Analyze an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the invoice data extracted from the image.\n\nHere is the extracted invoice data:\n\n{{ $('Analyze an image').item.json.content.parts[0].text }}\n\nBased only on this data, verify the invoice and return the required invoice details, risk assessment, issues found, and recommendations.",
+        "options": {
+          "systemMessage": "You are an Invoice Verification and Risk Analysis Assistant.\n\nAnalyze the invoice data provided by the user and return a structured JSON result.\n\nYour analysis must include:\n\n1. Invoice Details\n- Seller information\n- Customer information\n- Invoice number\n- Invoice date\n- Due date\n- Items\n- Taxes\n- Subtotal\n- Grand total\n- Payment details\n\n2. Risk Assessment\nClassify the invoice as:\n- \"Low Risk\" when the invoice appears complete and consistent.\n- \"Medium Risk\" when there are minor missing or inconsistent details.\n- \"High Risk\" when there are serious missing details, suspicious inconsistencies, incorrect calculations, or potentially unreliable information.\n\n3. Issues Found\nIdentify specific problems such as:\n- Missing seller information\n- Missing customer information\n- Missing GSTIN\n- Missing invoice number\n- Missing invoice or due date\n- Missing payment details\n- Tax calculation inconsistencies\n- Subtotal and grand-total inconsistencies\n- Incorrect CGST/SGST/IGST calculations\n- Duplicate or unclear items\n- Suspicious or incomplete information\n\n4. Recommendations\nProvide practical recommendations to resolve the issues found.\n\nImportant rules:\n- Use only the information provided.\n- Do not invent or assume information.\n- If information is missing, clearly mention it.\n- Check mathematical calculations where possible.\n- Do not make legal or financial claims.\n- Keep the risk assessment based only on the invoice information.\n- Return ONLY valid JSON.\n- Do not return Markdown, explanations, or code fences."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        96,
+        -16
+      ],
+      "id": "525bb9fb-57c1-4d76-8e5c-243bebaf4e34",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -48,
+        192
+      ],
+      "id": "8d867464-3d19-4791-86b9-ff319284e45f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json.output || $json.text || $json.content;\n\nlet data;\n\ntry {\n  data = typeof input === \"string\"\n    ? JSON.parse(input)\n    : input;\n} catch (error) {\n  return [{\n    json: {\n      success: false,\n      error: \"Invalid JSON returned by AI Agent\",\n      raw_output: input\n    }\n  }];\n}\n\nconst invoice = data.invoice_details || {};\nconst seller = invoice.seller || {};\nconst customer = invoice.customer || {};\nconst taxes = invoice.taxes || {};\nconst payment = invoice.payment_details || {};\n\nreturn [{\n  json: {\n\n    success: true,\n\n    // Seller\n    seller_name: seller.company_name || \"Not Found\",\n    seller_address: seller.address || \"Not Found\",\n    seller_gstin: seller.gstin || \"Not Found\",\n    seller_email: seller.email || \"Not Found\",\n    seller_phone: seller.phone || \"Not Found\",\n\n    // Invoice\n    invoice_number: invoice.invoice_number || \"Not Found\",\n    invoice_date: invoice.invoice_date || \"Not Found\",\n    due_date: invoice.due_date || \"Not Found\",\n\n    // Customer\n    customer_name: customer.name || \"Not Found\",\n    customer_address: customer.address || \"Not Found\",\n    customer_gstin: customer.gstin || \"Not Found\",\n\n    // Items\n    items: JSON.stringify(invoice.items || []),\n\n    // Amounts\n    subtotal: invoice.subtotal || \"Not Found\",\n    cgst: taxes.cgst || \"Not Found\",\n    sgst: taxes.sgst || \"Not Found\",\n    igst: taxes.igst || \"Not Found\",\n    grand_total: invoice.grand_total || \"Not Found\",\n\n    // Payment\n    bank_name: payment.bank_name || \"Not Found\",\n    account_name: payment.account_name || \"Not Found\",\n    account_number: payment.account_number || \"Not Found\",\n    ifsc: payment.ifsc || \"Not Found\",\n    payment_terms: payment.payment_terms || \"Not Found\",\n\n    // Risk\n    risk_level: data.risk_assessment || \"Not Found\",\n\n    // Issues\n    issues_found: (data.issues_found || []).join(\"; \"),\n\n    // Recommendations\n    recommendations: (data.recommendations || []).join(\"; \")\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        -16
+      ],
+      "id": "10faaf42-08d0-48ae-9cfd-8d37d7785837",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1uAvexigdS-VzM-oxmc_OOLzR6LfQOT_1Aa0O5uYV3Z8",
+          "mode": "list",
+          "cachedResultName": "AI Invoice ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uAvexigdS-VzM-oxmc_OOLzR6LfQOT_1Aa0O5uYV3Z8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uAvexigdS-VzM-oxmc_OOLzR6LfQOT_1Aa0O5uYV3Z8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "seller_name": "={{ $json.seller_name }}\n",
+            "seller_gstin": "={{ $json.seller_gstin }}",
+            "invoice_number": "={{ $json.invoice_number }}",
+            "invoice_date": "={{ $json.invoice_date }}",
+            "due_date": "={{ $json.due_date }}",
+            "customer_name": "={{ $json.customer_name }}",
+            "customer_gstin": "={{ $json.customer_gstin }}",
+            "subtotal": "={{ $json.subtotal }}",
+            "cgst": "={{ $json.cgst }}",
+            "sgst": "={{ $json.sgst }}",
+            "igst": "={{ $json.igst }}",
+            "grand_total": "={{ $json.grand_total }}",
+            "bank_name": "={{ $json.bank_name }}",
+            "risk_level": "={{ $json.risk_level }}",
+            "issues_found": "={{ $json.issues_found }}",
+            "recommendations": "={{ $json.recommendations }}",
+            "seller_address": "={{ $json.seller_address }}",
+            "seller_email": "={{ $json.seller_email }}",
+            "seller_phone": "={{ $json.seller_phone }}",
+            "customer_address": "={{ $json.customer_address }}",
+            "items": "={{ $json.items }}",
+            "account_name": "={{ $json.account_name }}",
+            "account_number": "={{ $json.account_number }}",
+            "ifsc": "={{ $json.ifsc }}",
+            "payment_terms": "={{ $json.payment_terms }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "success",
+              "displayName": "success",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "seller_name",
+              "displayName": "seller_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "seller_address",
+              "displayName": "seller_address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "seller_gstin",
+              "displayName": "seller_gstin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "seller_email",
+              "displayName": "seller_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "seller_phone",
+              "displayName": "seller_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "invoice_number",
+              "displayName": "invoice_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "invoice_date",
+              "displayName": "invoice_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "due_date",
+              "displayName": "due_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_address",
+              "displayName": "customer_address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_gstin",
+              "displayName": "customer_gstin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "items",
+              "displayName": "items",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "subtotal",
+              "displayName": "subtotal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cgst",
+              "displayName": "cgst",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sgst",
+              "displayName": "sgst",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "igst",
+              "displayName": "igst",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "grand_total",
+              "displayName": "grand_total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "bank_name",
+              "displayName": "bank_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "account_name",
+              "displayName": "account_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "account_number",
+              "displayName": "account_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ifsc",
+              "displayName": "ifsc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "payment_terms",
+              "displayName": "payment_terms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "risk_level",
+              "displayName": "risk_level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "issues_found",
+              "displayName": "issues_found",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recommendations",
+              "displayName": "recommendations",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        688,
+        -16
+      ],
+      "id": "db5ded3b-7930-4226-b344-41191b1ac511",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Gmail Trigger').item.json.To }}",
+        "subject": "=Invoice Validation Report -{{ $now }}",
+        "message": "=<h2>Invoice Verification Report</h2>  <p>Hello,</p>  <p>Your invoice has been analyzed successfully. Here are the details:</p>  <h3>Invoice Details</h3>  <p> <b>Seller:</b> {{ $json.seller_name }}<br> <b>Invoice Number:</b> {{ $json.invoice_number }}<br> <b>Invoice Date:</b> {{ $json.invoice_date }}<br> <b>Due Date:</b> {{ $json.due_date }}<br> <b>Customer:</b> {{ $json.customer_name }}<br> <b>Grand Total:</b> {{ $json.grand_total }} </p>  <h3>Risk Assessment</h3>  <p> <b>Risk Level:</b> {{ $json.risk_level }}<br> <b>Risk Score:</b> {{ $json.risk_score }}/100<br> <b>Reason:</b> {{ $json.risk_reason }} </p>  <h3>Issues Found</h3>  <p> {{ $json.issues_found || \"No issues found.\" }} </p>  <h3>Recommendations</h3>  <p> {{ $json.recommendations || \"No recommendations required.\" }} </p>  <hr>  <p>This invoice was automatically analyzed by the invoice verification system.</p>  <p>Regards,<br> Invoice Verification System</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        -16
+      ],
+      "id": "6aeb2995-3617-4df2-b4ab-0a985491d253",
+      "name": "Send a message",
+      "webhookId": "1a89bd0b-aa70-464f-8fcd-2f51ef45644e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XvqeA5UsjNVvSIqO",
+          "name": "Gmail account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a message": {
+      "main": [
+        [
+          {
+            "node": "Analyze an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze an image": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c3f4460f-e34f-4c92-a011-af64629893d8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "qubvzxUGuQaWNRRI",
+  "tags": []
+}

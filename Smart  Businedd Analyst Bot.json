@@ -1,0 +1,441 @@
+{
+  "name": "Smart  Businedd Analyst Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e112ecc0-2b73-4ece-a0bb-b66730e083eb",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1OGKTqYSR1weS8CP-eCpnSO8VxjXRt4FYw0hmMEGcSJ0",
+          "mode": "list",
+          "cachedResultName": "business data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OGKTqYSR1weS8CP-eCpnSO8VxjXRt4FYw0hmMEGcSJ0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OGKTqYSR1weS8CP-eCpnSO8VxjXRt4FYw0hmMEGcSJ0/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "cafb2eb7-332d-4d5a-81fa-b3239bd5be1e",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        208
+      ],
+      "id": "c2561ae8-739d-4b63-87a4-93999d6d5002",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following business data and provide a complete business analysis.\n\nBusiness Name:\n{{ $json.business_name }}\n\nIndustry:\n{{ $json.industry }}\n\nRevenue:\n{{ $json.revenue }}\n\nExpenses:\n{{ $json.expenses }}\n\nProfit:\n{{ $json.profit }}\n\nProfit Margin:\n{{ $json.profit_margin }}\n\nTotal Sales:\n{{ $json.total_sales }}\n\nTotal Orders:\n{{ $json.total_orders }}\n\nAverage Order Value:\n{{ $json.average_order_value }}\n\nTop Product:\n{{ $json.top_product }}\n\nTop Product Sales:\n{{ $json.top_product_sales }}\n\nLow Performing Product:\n{{ $json.low_performing_product }}\n\nCustomer Count:\n{{ $json.customer_count }}\n\nNew Customers:\n{{ $json.new_customers }}\n\nReturning Customers:\n{{ $json.returning_customers }}\n\nCustomer Growth:\n{{ $json.customer_growth }}\n\nSales Growth:\n{{ $json.sales_growth }}\n\nExpense Growth:\n{{ $json.expense_growth }}\n\nAnalyze the business performance and return the result in the required JSON format.",
+        "options": {
+          "systemMessage": "You are a Smart Business Analyst AI Agent.\n\nYour task is to analyze business data and provide useful business insights.\n\nAnalyze the provided data for:\n\n- Revenue\n- Expenses\n- Profit\n- Profit margin\n- Sales\n- Orders\n- Average order value\n- Top-performing products\n- Low-performing products\n- Customer growth\n- Sales growth\n- Expense growth\n- Overall business health\n\nProvide:\n1. Business health assessment\n2. Key insights\n3. Strengths\n4. Weaknesses\n5. Opportunities\n6. Threats\n7. Practical recommendations\n\nRules:\n- Use only the provided business data.\n- Do not invent or assume missing information.\n- If information is missing, write \"Not Available\".\n- Base insights on the actual numbers.\n- Keep the analysis clear, concise, and business-focused.\n- Calculate profit margin when required.\n- Highlight unusual increases in expenses or decreases in growth.\n- Identify the strongest and weakest business areas.\n- Give practical recommendations that can help improve the business.\n- Return ONLY valid JSON.\n- Do not use Markdown or explanations outside the JSON.\n\nReturn exactly this format:\n\n{\n  \"business_name\": \"\",\n  \"industry\": \"\",\n  \"business_health\": \"\",\n  \"key_insights\": \"\",\n  \"strengths\": \"\",\n  \"weaknesses\": \"\",\n  \"opportunities\": \"\",\n  \"threats\": \"\",\n  \"recommendations\": \"\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "ba8259b4-1e8a-491e-8212-87b5ad9dd87a",
+      "name": "Data Processing AI Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following processed business data and identify the important business trends.\n\nProcessed Business Data:\n\n{{ JSON.stringify($json) }}\n\nAnalyze the processed data and identify:\n- Overall trend\n- Sales trend\n- Revenue trend\n- Expense trend\n- Profit trend\n- Customer trend\n- Product trend\n- Positive trends\n- Negative trends\n- Important changes\n- Future outlook\n- Recommendations\n\nReturn ONLY the required JSON format.",
+        "options": {
+          "systemMessage": "You are a Business Trend Analysis AI Agent.\n\nYour task is to analyze the processed business data received from the previous Data Processing node and identify important business trends.\n\nThe input data has already been cleaned, processed, and prepared for analysis.\n\nAnalyze the processed data and identify:\n\n- Overall business trend\n- Sales trends\n- Revenue trends\n- Expense trends\n- Profit trends\n- Customer trends\n- Product performance trends\n- Growth patterns\n- Positive trends\n- Negative trends\n- Important changes\n- Potential future direction\n- Business actions based on the trends\n\nRules:\n- Use only the processed data provided as input.\n- Do not ask for the original/raw data.\n- Do not invent missing values or information.\n- Compare values and identify meaningful patterns.\n- Clearly mention whether trends are Increasing, Decreasing, Stable, or Mixed when possible.\n- If the processed data does not contain enough information for a trend, return \"Not Available\".\n- Focus on business insights rather than repeating the input data.\n- Keep the analysis concise and practical.\n- Return ONLY valid JSON.\n- Do not include Markdown or explanations outside the JSON.\n\nReturn exactly this format:\n\n{\n  \"overall_trend\": \"\",\n  \"sales_trend\": \"\",\n  \"revenue_trend\": \"\",\n  \"expense_trend\": \"\",\n  \"profit_trend\": \"\",\n  \"customer_trend\": \"\",\n  \"product_trend\": \"\",\n  \"positive_trends\": \"\",\n  \"negative_trends\": \"\",\n  \"important_changes\": \"\",\n  \"future_outlook\": \"\",\n  \"recommendations\": \"\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        736,
+        0
+      ],
+      "id": "8bb9d0aa-a822-4e39-95d5-0f6b05581a38",
+      "name": "Trend Analysis AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        208
+      ],
+      "id": "606b2326-8919-420a-b089-eb1fdcfea59e",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following processed business data and generate a business forecast.\n\nProcessed Business Data:\n\n{{ JSON.stringify($json) }}\n\nGenerate forecasts for:\n\n- Revenue\n- Sales\n- Expenses\n- Profit\n- Customers\n- Product performance\n- Expected growth\n- Expected decline\n- Future opportunities\n- Future risks\n- Overall business outlook\n- Recommended actions\n\nBase the forecast only on the processed data and existing business trends.\n\nReturn ONLY the required JSON format.",
+        "options": {
+          "systemMessage": "You are a Business Forecasting AI Agent.\n\nYour task is to analyze the processed business data received from the previous Data Processing node and generate realistic business forecasts.\n\nThe input data has already been cleaned, processed, and prepared for analysis.\n\nAnalyze the processed data and forecast:\n\n- Future revenue\n- Future sales\n- Future expenses\n- Future profit\n- Customer growth\n- Product performance\n- Overall business direction\n\nAlso identify:\n\n- Expected growth\n- Expected decline\n- Future opportunities\n- Future risks\n- Business outlook\n- Recommended actions\n\nRules:\n- Use only the processed business data provided as input.\n- Do not ask for raw data.\n- Do not invent historical values.\n- Do not present predictions as guaranteed results.\n- Clearly state that forecasts are estimates based on the available processed data.\n- Use existing trends and growth patterns to make forecasts.\n- If there is not enough information to make a forecast, return \"Not Available\".\n- Keep forecasts realistic and business-focused.\n- Do not make unsupported assumptions.\n- Return ONLY valid JSON.\n- Do not include Markdown or explanations outside the JSON.\n\nReturn exactly this format:\n\n{\n  \"revenue_forecast\": \"\",\n  \"sales_forecast\": \"\",\n  \"expense_forecast\": \"\",\n  \"profit_forecast\": \"\",\n  \"customer_forecast\": \"\",\n  \"product_forecast\": \"\",\n  \"expected_growth\": \"\",\n  \"expected_decline\": \"\",\n  \"future_opportunities\": \"\",\n  \"future_risks\": \"\",\n  \"business_outlook\": \"\",\n  \"recommendations\": \"\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1008,
+        0
+      ],
+      "id": "21149e22-6f21-4bb0-b72f-870b76be9b86",
+      "name": "Forcasting AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1008,
+        240
+      ],
+      "id": "4d4830ec-f3b9-404e-9dea-cab3555e7d33",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following processed business data and identify the important business risks.\n\nProcessed Business Data:\n\n{{ JSON.stringify($json) }}\n\nAnalyze the data for:\n\n- Financial risks\n- Sales risks\n- Revenue risks\n- Expense risks\n- Profitability risks\n- Customer risks\n- Product risks\n- Growth risks\n- Operational risks\n\nFor each important risk, consider its severity, reason, potential impact, and recommended action.\n\nAlso determine:\n- Overall risk level\n- Critical risks\n- Major risk factors\n- Risk mitigation recommendations\n\nBase the analysis only on the processed business data.\n\nReturn ONLY the required JSON format.",
+        "options": {
+          "systemMessage": "You are a Business Risk Analysis AI Agent.\n\nYour task is to analyze the processed business data received from the previous Data Processing node and identify important business risks.\n\nThe input data has already been cleaned, processed, and prepared for analysis.\n\nAnalyze the data to identify:\n\n- Financial risks\n- Sales risks\n- Revenue risks\n- Expense risks\n- Profitability risks\n- Customer risks\n- Product risks\n- Growth risks\n- Operational risks\n- Market-related risks\n\nFor each important risk, determine:\n- Risk name\n- Risk level: Low, Medium, or High\n- Reason\n- Potential business impact\n- Recommended action\n\nAlso provide:\n- Overall risk level\n- Critical risks\n- Major risk factors\n- Risk mitigation recommendations\n\nRules:\n- Use only the processed business data provided as input.\n- Do not ask for raw data.\n- Do not invent information.\n- Do not make unsupported assumptions.\n- Base risk levels on the available data and identified business patterns.\n- If there is not enough information to identify a risk, return \"Not Available\".\n- Focus on practical and actionable business risks.\n- Keep the analysis clear and concise.\n- Return ONLY valid JSON.\n- Do not include Markdown or explanations outside the JSON.\n\nReturn exactly this format:\n\n{\n  \"overall_risk_level\": \"\",\n  \"financial_risks\": \"\",\n  \"sales_risks\": \"\",\n  \"revenue_risks\": \"\",\n  \"expense_risks\": \"\",\n  \"profitability_risks\": \"\",\n  \"customer_risks\": \"\",\n  \"product_risks\": \"\",\n  \"growth_risks\": \"\",\n  \"operational_risks\": \"\",\n  \"critical_risks\": \"\",\n  \"major_risk_factors\": \"\",\n  \"risk_mitigation\": \"\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1312,
+        0
+      ],
+      "id": "19e091fc-74ec-4308-aee5-dd5181b1685f",
+      "name": "Risk Analysis AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1312,
+        208
+      ],
+      "id": "d05c1dc0-c6ae-475d-9ed8-b4b094c19683",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create a final business report using the following processed business data and AI analysis.\n\nPROCESSED BUSINESS DATA:\n{{ JSON.stringify($json) }}\n\nTREND ANALYSIS:\n{{ $('Trend Analysis AI Agent').item.json.output }}\nFORECASTING ANALYSIS:\n{{ $('Forcasting AI Agent').item.json.output }}\nRISK ANALYSIS:\n{{ JSON.stringify($('Risk Analysis AI Agent').item.json) }}\n\nCombine all available information and create a professional final business report.\n\nThe report should include:\n- Executive summary\n- Business performance\n- Trends\n- Forecast\n- Risks\n- Key insights\n- Opportunities\n- Recommendations\n- Overall business outlook\n\nReturn ONLY the required JSON format.",
+        "options": {
+          "systemMessage": "You are a Smart Business Report Writer AI Agent.\n\nYour task is to create a clear, professional, and concise business report using the processed business data and the analysis provided by the previous AI agents.\n\nThe available information may include:\n- Processed business data\n- Trend analysis\n- Forecasting analysis\n- Risk analysis\n- Business performance insights\n\nCreate a final report containing:\n\n1. Executive Summary\n2. Business Performance\n3. Trend Analysis\n4. Forecast\n5. Risk Analysis\n6. Key Insights\n7. Opportunities\n8. Recommended Actions\n9. Overall Business Outlook\n\nRules:\n- Use only the information provided in the input.\n- Do not invent facts, numbers, or business information.\n- Do not repeat the entire input data unnecessarily.\n- Combine the analysis from all available agents into one coherent report.\n- Clearly distinguish forecasts from actual business results.\n- Mention important risks and opportunities.\n- Recommendations must be practical and based on the analysis.\n- If information is missing, write \"Not Available\".\n- Keep the report professional, clear, and easy to understand.\n- Return ONLY valid JSON.\n- Do not use Markdown or explanations outside the JSON.\n\nReturn exactly this format:\n\n{\n  \"business_name\": \"\",\n  \"executive_summary\": \"\",\n  \"business_performance\": \"\",\n  \"trend_analysis\": \"\",\n  \"forecast\": \"\",\n  \"risk_analysis\": \"\",\n  \"key_insights\": \"\",\n  \"opportunities\": \"\",\n  \"recommendations\": \"\",\n  \"overall_outlook\": \"\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1680,
+        0
+      ],
+      "id": "751f1ce8-c0ce-4d3a-b9f0-bf494a84a6e8",
+      "name": "Report Writer AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        192
+      ],
+      "id": "19c2aee2-27de-4302-aa6d-39ee1e1719df",
+      "name": "Google Gemini Chat Model4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.output;\n\nlet report;\n\ntry {\n  report = typeof raw === 'string'\n    ? JSON.parse(raw)\n    : raw;\n} catch (error) {\n  return {\n    json: {\n      success: false,\n      error: \"Could not parse Report Writer output\",\n      raw_output: raw\n    }\n  };\n}\n\nreturn {\n  json: {\n    business_name: report.business_name || \"Not Available\",\n    executive_summary: report.executive_summary || \"Not Available\",\n    business_performance: report.business_performance || \"Not Available\",\n    trend_analysis: report.trend_analysis || \"Not Available\",\n    forecast: report.forecast || \"Not Available\",\n    risk_analysis: report.risk_analysis || \"Not Available\",\n    key_insights: report.key_insights || \"Not Available\",\n    opportunities: report.opportunities || \"Not Available\",\n    recommendations: report.recommendations || \"Not Available\",\n    overall_outlook: report.overall_outlook || \"Not Available\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2048,
+        0
+      ],
+      "id": "c1d697fb-b966-4d60-8cc7-78d46862a5f3",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "rutvimistry5@gmail.com",
+        "subject": "Weekly Business Performation",
+        "message": "=<!-- LOOKER STUDIO DASHBOARD -->\n\n<div style=\"margin-top:30px; background:#f4f8fc; border:1px solid #d9e4ef; border-radius:12px; padding:25px; text-align:center;\">\n\n  <h3 style=\"margin:0 0 8px 0; color:#1f4e78;\">\n    📊 Business Analytics Dashboard\n  </h3>\n\n  <p style=\"margin:0 0 20px 0; color:#666; font-size:14px;\">\n    View detailed business statistics, performance metrics and analytics.\n  </p>\n\n  <a href=\"https://datastudio.google.com/reporting/4081853c-44ac-4a25-a340-13b35416405e\"\n     target=\"_blank\"\n     style=\"\n       display:inline-block;\n       background:#1f4e78;\n       color:#ffffff;\n       text-decoration:none;\n       padding:13px 25px;\n       border-radius:7px;\n       font-weight:bold;\n       font-size:14px;\n     \">\n    📈 View Full Dashboard\n  </a>\n\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2272,
+        0
+      ],
+      "id": "83074b97-a7be-4da8-abe8-ffef85b9188d",
+      "name": "Send a message",
+      "webhookId": "d662f7c1-5b0a-44ab-8754-5cbe9c4f9a33",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zSsVwVZiAzpF61qb",
+          "name": "Gmail account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Data Processing AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Data Processing AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Processing AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Trend Analysis AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Trend Analysis AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trend Analysis AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Forcasting AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Forcasting AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Forcasting AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Risk Analysis AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Risk Analysis AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Risk Analysis AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Report Writer AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Report Writer AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report Writer AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "19e2d6d6-5d02-4ff3-997f-c8ed4262e938",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "bbWq33qYwn058sWX",
+  "tags": []
+}

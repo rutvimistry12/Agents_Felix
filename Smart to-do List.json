@@ -1,0 +1,446 @@
+{
+  "name": "Smart to-do List",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "20644f80-389a-4d55-929a-503d8a407fd8",
+      "name": "Telegram Trigger",
+      "webhookId": "76ab58c9-613c-4165-b032-27059749efb7",
+      "credentials": {
+        "telegramApi": {
+          "id": "uP4jcvU6oHkomkCE",
+          "name": "agent_5smarttodo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are a Smart Todo List Assistant.\n\nYour job is to help users create, organize, prioritize, update, and complete tasks efficiently.\n\nFor every task, identify and maintain these fields:\n- id\n- task_title\n- description\n- priority\n- estimated_time\n- deadline\n- category\n- status\n\nRules:\n1. Understand the user's task request clearly.\n2. Extract the task title, description, priority, estimated time, deadline, and category when provided.\n3. If priority is not provided, determine it automatically:\n   - High: urgent, important, deadline is close, or critical work\n   - Medium: important but not urgent\n   - Low: optional or less urgent work\n4. If category is not provided, assign a suitable category such as Work, Personal, Study, Meeting, Project, or Other.\n5. Set status to \"Pending\" when a new task is created.\n6. When the user says a task is completed, change its status to \"Completed\".\n7. When the user asks to see tasks, return them in a clear table.\n8. Help identify overdue tasks based on the deadline and current date/time.\n9. Do not invent missing information. Use \"Not specified\" when necessary.\n10. Keep responses concise, professional, and easy to understand.\n11. When multiple tasks are provided, process each task separately.\n12. If the user asks to prioritize tasks, rank them based on urgency, importance, and deadline.\n13. If a task is completed, respond with a short confirmation message.\n14. Always maintain consistent field names and values so the data can be used by automation workflows.\n\nExample task format:\n\nID | Task Title | Description | Priority | Estimated Time | Deadline | Category | Status\n\nWhen creating a task, return structured information that can easily be passed to the next n8n node."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "fc414d62-ef51-460d-b0e6-7b9794791627",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        208
+      ],
+      "id": "dfe07054-4a44-40ed-8c36-9896257b0761",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        0
+      ],
+      "id": "8032fa87-cdd4-4b55-92ac-816a3790cbe1",
+      "name": "Send a text message",
+      "webhookId": "ea42cf83-24d2-46ab-aebc-9543c66091d2",
+      "credentials": {
+        "telegramApi": {
+          "id": "uP4jcvU6oHkomkCE",
+          "name": "agent_5smarttodo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1unUNNzi2arYLNmH-420gD00IpG3t5mHkPs_RKEU8b3w",
+          "mode": "list",
+          "cachedResultName": "Smart todo list",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1unUNNzi2arYLNmH-420gD00IpG3t5mHkPs_RKEU8b3w/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1unUNNzi2arYLNmH-420gD00IpG3t5mHkPs_RKEU8b3w/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Task Title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Task_Title', `The task name extracted from the user's message`, 'string') }}",
+            "Priority": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Priority', `priority accoring to task\n`, 'string') }}",
+            "Deadline": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Deadline', `sequance-wise deadline`, 'string') }}",
+            "Category": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Category', `personal or work or family `, 'string') }}",
+            "Status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Status', `pending or completed `, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Task Title",
+              "displayName": "Task Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Deadline",
+              "displayName": "Deadline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        240,
+        224
+      ],
+      "id": "8b312d98-73cf-4282-903e-abc1155fb2dc",
+      "name": "create_task",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1unUNNzi2arYLNmH-420gD00IpG3t5mHkPs_RKEU8b3w",
+          "mode": "list",
+          "cachedResultName": "Smart todo list",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1unUNNzi2arYLNmH-420gD00IpG3t5mHkPs_RKEU8b3w/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1unUNNzi2arYLNmH-420gD00IpG3t5mHkPs_RKEU8b3w/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        416,
+        224
+      ],
+      "id": "28b9d57a-2d4a-4b4a-b74a-3871519897f4",
+      "name": "get_task",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1unUNNzi2arYLNmH-420gD00IpG3t5mHkPs_RKEU8b3w",
+          "mode": "list",
+          "cachedResultName": "Smart todo list",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1unUNNzi2arYLNmH-420gD00IpG3t5mHkPs_RKEU8b3w/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1unUNNzi2arYLNmH-420gD00IpG3t5mHkPs_RKEU8b3w/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Task Title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Task_Title__using_to_match_', `Task name meantioned by the user\n\nExample:\ncomplete learn python -> learn python\ncomplete UI/UX design-> UI/UX design\ncomplete learn react -> learn react`, 'string') }}",
+            "Status": "Completed"
+          },
+          "matchingColumns": [
+            "Task Title"
+          ],
+          "schema": [
+            {
+              "id": "Task Title",
+              "displayName": "Task Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Deadline",
+              "displayName": "Deadline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        560,
+        224
+      ],
+      "id": "a5861718-e79a-415b-9954-0b3a78510c1a",
+      "name": "complete task",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1unUNNzi2arYLNmH-420gD00IpG3t5mHkPs_RKEU8b3w",
+          "mode": "list",
+          "cachedResultName": "Smart todo list",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1unUNNzi2arYLNmH-420gD00IpG3t5mHkPs_RKEU8b3w/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1unUNNzi2arYLNmH-420gD00IpG3t5mHkPs_RKEU8b3w/edit#gid=0"
+        },
+        "startIndex": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start_Row_Number', `row number to delete\n\nexample:\n\ndelete task 1 -> row 2\ndelete task 2 ->row 3\ndelete task 3 ->row 4\n\ngoogle sheet row number = task ID+1`, 'number') }}"
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        720,
+        224
+      ],
+      "id": "57ea73e7-2ba7-47da-a8b4-c91d44be25a1",
+      "name": "Delete rows",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_task": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_task": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "complete task": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete rows": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1cde57e6-b497-4c4a-862b-9f5db15101a2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "9LA74DZm9WXZn7rf",
+  "tags": []
+}

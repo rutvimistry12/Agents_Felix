@@ -1,0 +1,391 @@
+{
+  "name": "Skill Gap Analyzer",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Skill Gap Analyzer",
+        "formDescription": "discover new skill from here",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Usere full name"
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email"
+            },
+            {
+              "fieldLabel": "Target job role",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Ai automation"
+                  },
+                  {
+                    "option": "AI engineer"
+                  },
+                  {
+                    "option": "full stack developer"
+                  },
+                  {
+                    "option": "Python developer"
+                  },
+                  {
+                    "option": "SOfteare developer"
+                  },
+                  {
+                    "option": "Mobile developer"
+                  },
+                  {
+                    "option": "devops developer"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Resume ",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -448,
+        16
+      ],
+      "id": "7f2ccc5b-2a03-467f-9b6c-a0df0f345b9c",
+      "name": "On form submission",
+      "webhookId": "39a5777e-09bb-4ee5-83dc-310cff516233"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "Resume_",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        16
+      ],
+      "id": "7e07d261-3201-4d7b-a558-a18ac3f93883",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this candidate's resume and perform a skill gap analysis.\n\nTARGET JOB ROLE:\n{{ $json.target_role }}\n\nRESUME TEXT:\n{{ $json.text }}\n\nCompare the candidate's current skills with the skills required for the target role.\n\nIdentify:\n- Strong skills\n- Partial skills\n- Missing skills\n- Estimated skill match\n- Priority skill gaps\n- Learning roadmap\n- Recommended projects\n- Interview preparation\n- 30/60/90 day roadmap\n- Overall job readiness\n\nReturn the analysis using the format defined in the system instructions.",
+        "options": {
+          "systemMessage": "=You are a professional AI Skill Gap Analyzer.\n\nYour task is to analyze a candidate's resume and compare their current skills, experience, education, projects, and certifications with the requirements of their target job role.\n\nThe candidate's resume will be provided as extracted text from a PDF.\n\nYour responsibilities:\n\n1. Extract the following information from the resume:\n   - Candidate name\n   - Education\n   - Programming languages\n   - Frameworks and libraries\n   - Web technologies\n   - Databases\n   - Tools\n   - AI/ML skills\n   - Projects\n   - Internship/work experience\n   - Certifications\n   - Professional skills\n\n2. Identify the target job role from the user input.\n\n3. Determine the important skills normally required for that target role.\n\n4. Compare the candidate's current skills against the required skills.\n\n5. Categorize skills into:\n   - Strong Skills\n   - Partial Skills\n   - Missing Skills\n   - Optional/Advanced Skills\n\n6. Calculate an estimated skill match percentage.\n   This percentage is an approximate assessment, not a scientific measurement.\n\n7. For every important skill gap, explain:\n   - Skill name\n   - Current level\n   - Required level\n   - Gap\n   - Why it matters\n   - What to learn\n   - Practical project/task to practice\n\n8. Create a prioritized roadmap:\n   - High Priority\n   - Medium Priority\n   - Low Priority\n\n9. Recommend projects that can help close the skill gaps.\n\n10. Provide interview preparation topics for the target role.\n\n11. Give an overall job-readiness assessment:\n   - Not Ready\n   - Beginner / Building\n   - Almost Job Ready\n   - Job Ready\n   - Strong Candidate\n\nIMPORTANT RULES:\n- Do not invent skills or experience.\n- Only consider a skill as existing if it is mentioned in the resume.\n- Distinguish between theoretical knowledge and practical experience.\n- Do not assume that listing a technology means the candidate is an expert.\n- Keep recommendations practical and beginner-friendly.\n- Focus on the target job role.\n- If the target role is missing, clearly state that the target role is required for an accurate skill-gap analysis.\n\nReturn the result using this structure:\n\n## Skill Gap Analysis\n\n### Candidate\nName: ...\n\n### Target Role\n...\n\n### Estimated Skill Match\n...%\n\n### Job Readiness\n...\n\n### Skill Comparison\n\n| Skill | Current Level | Required Level | Status |\n|---|---|---|---|\n\n### Strong Skills\n- ...\n\n### Partial Skills\n- ...\n\n### Missing Skills\n- ...\n\n### Priority Skill Gaps\n1. ...\n2. ...\n3. ...\n\n### Learning Roadmap\n#### High Priority\n- ...\n\n#### Medium Priority\n- ...\n\n#### Low Priority\n- ...\n\n### Recommended Projects\n1. ...\n2. ...\n3. ...\n\n### Interview Preparation\n- ...\n\n### 30-Day Plan\n...\n\n### 60-Day Plan\n...\n\n### 90-Day Plan\n...\n\n### Final Recommendation\n...\n2. User Message\n\nBecause your resume is coming from Extract from File, don't manually paste the whole resume.\n\nUse an expression that passes the extracted text field.\n\nFor example:\n\nAnalyze this candidate's resume and perform a skill gap analysis.\n\nTARGET JOB ROLE:\n{{ $json.target_role }}\n\nRESUME TEXT:\n{{ $json.text }}\n\nCompare the candidate's current skills with the skills required for the target role.\n\nIdentify:\n- Strong skills\n- Partial skills\n- Missing skills\n- Estimated skill match\n- Priority skill gaps\n- Learning roadmap\n- Recommended projects\n- Interview preparation\n- 30/60/90 day roadmap\n- Overall job readiness\n\nReturn the analysis using the format defined in the system instructions."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        0,
+        16
+      ],
+      "id": "2202c099-d96d-402e-b93d-1015d51718d9",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -144,
+        224
+      ],
+      "id": "6a4c5896-1708-43be-b65f-c60c3896e5a5",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// AI SKILL GAP ANALYZER\n// n8n Code Node\n// Mode: Run Once for All Items\n// ============================================================\n\n\n// ============================================================\n// 1. JOB REQUIREMENTS\n// ============================================================\n\nconst jobRequirements = {\n\n  \"python developer\": {\n    \"Python\": 10,\n    \"OOP\": 8,\n    \"DSA\": 7,\n    \"SQL\": 8,\n    \"REST API\": 8,\n    \"Git\": 6,\n    \"Django\": 9,\n    \"FastAPI\": 7,\n    \"PostgreSQL\": 7,\n    \"Testing\": 6,\n    \"Docker\": 5,\n    \"Linux\": 5\n  },\n\n  \"full stack developer\": {\n    \"HTML\": 7,\n    \"CSS\": 7,\n    \"JavaScript\": 10,\n    \"React\": 8,\n    \"Node.js\": 8,\n    \"REST API\": 8,\n    \"SQL\": 8,\n    \"Git\": 6,\n    \"Authentication\": 6,\n    \"Responsive Design\": 6,\n    \"Testing\": 5,\n    \"Docker\": 4\n  },\n\n  \"machine learning engineer\": {\n    \"Python\": 10,\n    \"NumPy\": 7,\n    \"Pandas\": 7,\n    \"Scikit-Learn\": 9,\n    \"Statistics\": 8,\n    \"Machine Learning\": 10,\n    \"Data Preprocessing\": 8,\n    \"Feature Engineering\": 8,\n    \"Model Evaluation\": 8,\n    \"SQL\": 6,\n    \"Git\": 5,\n    \"FastAPI\": 5,\n    \"Docker\": 5\n  },\n\n  \"ai/ml engineer\": {\n    \"Python\": 10,\n    \"NumPy\": 7,\n    \"Pandas\": 7,\n    \"Machine Learning\": 10,\n    \"Deep Learning\": 9,\n    \"Scikit-Learn\": 8,\n    \"TensorFlow\": 7,\n    \"PyTorch\": 7,\n    \"NLP\": 7,\n    \"LLM\": 8,\n    \"REST API\": 6,\n    \"Git\": 5,\n    \"Docker\": 5\n  },\n\n  \"php developer\": {\n    \"PHP\": 10,\n    \"OOP\": 8,\n    \"MySQL\": 8,\n    \"SQL\": 7,\n    \"HTML\": 6,\n    \"CSS\": 6,\n    \"JavaScript\": 8,\n    \"REST API\": 7,\n    \"Git\": 6,\n    \"Laravel\": 9,\n    \"Authentication\": 6,\n    \"Testing\": 5\n  }\n\n};\n\n\n// ============================================================\n// 2. HELPER FUNCTIONS\n// ============================================================\n\nfunction normalize(text) {\n\n  return String(text || \"\")\n    .toLowerCase()\n    .trim()\n    .replace(/[._-]/g, \" \")\n    .replace(/\\s+/g, \" \");\n\n}\n\n\nfunction getLevel(level) {\n\n  if (typeof level === \"number\") {\n\n    return Math.max(\n      0,\n      Math.min(5, level)\n    );\n\n  }\n\n  const value = normalize(level);\n\n  if (value.includes(\"expert\")) return 5;\n\n  if (value.includes(\"advanced\")) return 4;\n\n  if (value.includes(\"intermediate\")) return 3;\n\n  if (value.includes(\"basic\")) return 2;\n\n  if (value.includes(\"beginner\")) return 1;\n\n  if (\n    value.includes(\"missing\") ||\n    value.includes(\"none\") ||\n    value.includes(\"no knowledge\")\n  ) {\n    return 0;\n  }\n\n  return 0;\n\n}\n\n\nfunction escapeHTML(value) {\n\n  return String(value ?? \"\")\n    .replace(/&/g, \"&amp;\")\n    .replace(/</g, \"&lt;\")\n    .replace(/>/g, \"&gt;\")\n    .replace(/\"/g, \"&quot;\")\n    .replace(/'/g, \"&#039;\");\n\n}\n\n\nfunction getLevelLabel(level) {\n\n  switch (level) {\n\n    case 0:\n      return \"Missing\";\n\n    case 1:\n      return \"Beginner\";\n\n    case 2:\n      return \"Basic\";\n\n    case 3:\n      return \"Intermediate\";\n\n    case 4:\n      return \"Advanced\";\n\n    case 5:\n      return \"Expert\";\n\n    default:\n      return \"Unknown\";\n\n  }\n\n}\n\n\nfunction getStatusClass(status) {\n\n  if (status === \"Strong\") {\n    return \"strong\";\n  }\n\n  if (status === \"Partial\") {\n    return \"partial\";\n  }\n\n  return \"missing\";\n\n}\n\n\n// ============================================================\n// 3. GET INPUT\n// ============================================================\n\nconst input = items[0]?.json || {};\n\n\n// ============================================================\n// 4. TARGET JOB ROLE\n// ============================================================\n\nconst targetRole =\n  input.targetRole ||\n  input.target_role ||\n  input.jobRole ||\n  input.job_role ||\n  \"Python Developer\";\n\n\n// ============================================================\n// 5. FIND JOB ROLE\n// ============================================================\n\nconst roleKey = Object.keys(jobRequirements).find(\n\n  key =>\n    normalize(key) ===\n    normalize(targetRole)\n\n);\n\n\nif (!roleKey) {\n\n  return [\n\n    {\n\n      json: {\n\n        success: false,\n\n        error:\n          \"Target job role is not supported.\",\n\n        receivedRole:\n          targetRole,\n\n        availableRoles:\n          Object.keys(jobRequirements)\n\n      }\n\n    }\n\n  ];\n\n}\n\n\n// ============================================================\n// 6. GET AI-GENERATED SKILLS\n// ============================================================\n\nlet candidateSkills =\n  input.skills || [];\n\n\n// If skills are returned as a JSON string\nif (\n  typeof candidateSkills === \"string\"\n) {\n\n  try {\n\n    candidateSkills =\n      JSON.parse(candidateSkills);\n\n  }\n\n  catch (error) {\n\n    candidateSkills = [];\n\n  }\n\n}\n\n\n// Safety check\nif (!Array.isArray(candidateSkills)) {\n\n  candidateSkills = [];\n\n}\n\n\n// ============================================================\n// 7. CREATE CANDIDATE SKILL MAP\n// ============================================================\n\nconst skillMap = {};\n\n\nfor (const skill of candidateSkills) {\n\n  if (!skill) {\n    continue;\n  }\n\n\n  const name =\n    skill.name ||\n    skill.skill ||\n    skill.title;\n\n\n  if (!name) {\n    continue;\n  }\n\n\n  const level = getLevel(\n\n    skill.level ??\n    skill.proficiency ??\n    skill.currentLevel ??\n    0\n\n  );\n\n\n  skillMap[normalize(name)] = {\n\n    name: String(name),\n\n    level\n\n  };\n\n}\n\n\n// ============================================================\n// 8. GET JOB REQUIREMENTS\n// ============================================================\n\nconst requirements =\n  jobRequirements[roleKey];\n\n\n// ============================================================\n// 9. INITIALIZE SCORE\n// ============================================================\n\nlet totalWeight = 0;\n\nlet earnedWeight = 0;\n\n\nconst comparison = [];\n\nconst strongSkills = [];\n\nconst partialSkills = [];\n\nconst missingSkills = [];\n\n\n// ============================================================\n// 10. COMPARE SKILLS\n// ============================================================\n\nfor (\n  const [requiredSkill, weight]\n  of Object.entries(requirements)\n) {\n\n  totalWeight += weight;\n\n\n  const normalizedRequired =\n    normalize(requiredSkill);\n\n\n  let candidate =\n    skillMap[normalizedRequired];\n\n\n  // --------------------------------------------------------\n  // Partial name matching\n  // --------------------------------------------------------\n\n  if (!candidate) {\n\n    const matchingKey =\n      Object.keys(skillMap).find(\n\n        key =>\n\n          key.includes(\n            normalizedRequired\n          ) ||\n\n          normalizedRequired.includes(\n            key\n          )\n\n      );\n\n\n    if (matchingKey) {\n\n      candidate =\n        skillMap[matchingKey];\n\n    }\n\n  }\n\n\n  // --------------------------------------------------------\n  // Current level\n  // --------------------------------------------------------\n\n  const currentLevel =\n    candidate\n      ? candidate.level\n      : 0;\n\n\n  // --------------------------------------------------------\n  // Calculate weighted score\n  // --------------------------------------------------------\n\n  const skillScore =\n    (currentLevel / 5) *\n    weight;\n\n\n  earnedWeight +=\n    skillScore;\n\n\n  // --------------------------------------------------------\n  // Determine status\n  // --------------------------------------------------------\n\n  let status;\n\n\n  if (currentLevel >= 4) {\n\n    status = \"Strong\";\n\n    strongSkills.push(\n      requiredSkill\n    );\n\n  }\n\n  else if (currentLevel > 0) {\n\n    status = \"Partial\";\n\n    partialSkills.push(\n      requiredSkill\n    );\n\n  }\n\n  else {\n\n    status = \"Missing\";\n\n    missingSkills.push(\n      requiredSkill\n    );\n\n  }\n\n\n  // --------------------------------------------------------\n  // Add comparison\n  // --------------------------------------------------------\n\n  comparison.push({\n\n    skill:\n      requiredSkill,\n\n    importance:\n      weight,\n\n    currentLevel,\n\n    currentLevelLabel:\n      getLevelLabel(\n        currentLevel\n      ),\n\n    score:\n      Number(\n        skillScore.toFixed(2)\n      ),\n\n    status\n\n  });\n\n}\n\n\n// ============================================================\n// 11. FINAL SCORE\n// ============================================================\n\nlet score = 0;\n\n\nif (totalWeight > 0) {\n\n  score =\n    Number(\n\n      (\n        (earnedWeight /\n          totalWeight) *\n        100\n\n      ).toFixed(1)\n\n    );\n\n}\n\n\n// Make sure score is between 0 and 100\nscore =\n  Math.max(\n    0,\n    Math.min(\n      100,\n      score\n    )\n  );\n\n\n// ============================================================\n// 12. JOB READINESS\n// ============================================================\n\nlet jobReadiness;\n\n\nif (score >= 85) {\n\n  jobReadiness =\n    \"Strong Candidate\";\n\n}\n\nelse if (score >= 70) {\n\n  jobReadiness =\n    \"Job Ready\";\n\n}\n\nelse if (score >= 55) {\n\n  jobReadiness =\n    \"Almost Job Ready\";\n\n}\n\nelse if (score >= 35) {\n\n  jobReadiness =\n    \"Beginner / Building\";\n\n}\n\nelse {\n\n  jobReadiness =\n    \"Not Ready\";\n\n}\n\n\n// ============================================================\n// 13. SCORE MESSAGE\n// ============================================================\n\nlet scoreMessage;\n\n\nif (score >= 85) {\n\n  scoreMessage =\n    \"Excellent match. Focus on interview preparation and advanced practical projects.\";\n\n}\n\nelse if (score >= 70) {\n\n  scoreMessage =\n    \"Good match. Strengthen the remaining gaps and build practical projects.\";\n\n}\n\nelse if (score >= 55) {\n\n  scoreMessage =\n    \"You are close to being job ready. Focus on the high-priority missing skills.\";\n\n}\n\nelse if (score >= 35) {\n\n  scoreMessage =\n    \"You have a foundation but need more practical learning before becoming job ready.\";\n\n}\n\nelse {\n\n  scoreMessage =\n    \"Focus on the fundamental skills required for this role.\";\n\n}\n\n\n// ============================================================\n// 14. PRIORITY GAPS\n// ============================================================\n\nconst priorityGaps = comparison\n\n  .filter(\n    item =>\n      item.status !== \"Strong\"\n  )\n\n  .sort(\n\n    (a, b) => {\n\n      // Missing skills first\n\n      if (\n        a.status === \"Missing\" &&\n        b.status !== \"Missing\"\n      ) {\n\n        return -1;\n\n      }\n\n\n      if (\n        b.status === \"Missing\" &&\n        a.status !== \"Missing\"\n      ) {\n\n        return 1;\n\n      }\n\n\n      // Higher importance first\n\n      return (\n        b.importance -\n        a.importance\n      );\n\n    }\n\n  );\n\n\n// ============================================================\n// 15. LEARNING PRIORITIES\n// ============================================================\n\nconst highPriority =\n  priorityGaps\n\n    .filter(\n      item =>\n        item.importance >= 8\n    )\n\n    .map(\n      item =>\n        item.skill\n    );\n\n\nconst mediumPriority =\n  priorityGaps\n\n    .filter(\n      item =>\n        item.importance >= 6 &&\n        item.importance < 8\n    )\n\n    .map(\n      item =>\n        item.skill\n    );\n\n\nconst lowPriority =\n  priorityGaps\n\n    .filter(\n      item =>\n        item.importance < 6\n    )\n\n    .map(\n      item =>\n        item.skill\n    );\n\n\n// ============================================================\n// 16. 30 / 60 / 90 DAY ROADMAP\n// ============================================================\n\nconst roadmap = {\n\n  \"30_Days\":\n    highPriority.slice(\n      0,\n      4\n    ),\n\n  \"60_Days\": [\n\n    ...highPriority.slice(4),\n\n    ...mediumPriority.slice(\n      0,\n      4\n    )\n\n  ],\n\n  \"90_Days\": [\n\n    ...mediumPriority.slice(4),\n\n    ...lowPriority\n\n  ]\n\n};\n\n\n// ============================================================\n// 17. HTML - SKILL TABLE\n// ============================================================\n\nconst skillRows =\n  comparison\n\n    .map(item => {\n\n      const percentage =\n        Math.round(\n          (item.currentLevel /\n            5) *\n          100\n        );\n\n\n      return `\n\n        <tr>\n\n          <td>\n            <strong>\n              ${escapeHTML(\n                item.skill\n              )}\n            </strong>\n          </td>\n\n          <td>\n            ${item.currentLevel}/5\n            <br>\n            <small>\n              ${escapeHTML(\n                item.currentLevelLabel\n              )}\n            </small>\n          </td>\n\n          <td>\n\n            <div class=\"progress\">\n\n              <div\n                class=\"progress-bar\"\n                style=\"width:${percentage}%\"\n              ></div>\n\n            </div>\n\n          </td>\n\n          <td>\n            ${item.score}\n          </td>\n\n          <td>\n\n            <span\n              class=\"badge ${getStatusClass(\n                item.status\n              )}\"\n            >\n\n              ${escapeHTML(\n                item.status\n              )}\n\n            </span>\n\n          </td>\n\n        </tr>\n\n      `;\n\n    })\n\n    .join(\"\");\n\n\n// ============================================================\n// 18. HTML - STRONG SKILLS\n// ============================================================\n\nconst strongHTML =\n\n  strongSkills.length > 0\n\n    ? strongSkills\n\n        .map(\n\n          skill => `\n\n            <span class=\"skill-tag\">\n\n              ${escapeHTML(\n                skill\n              )}\n\n            </span>\n\n          `\n\n        )\n\n        .join(\"\")\n\n    : `<p>No strong skills identified.</p>`;\n\n\n// ============================================================\n// 19. HTML - PARTIAL SKILLS\n// ============================================================\n\nconst partialHTML =\n\n  partialSkills.length > 0\n\n    ? partialSkills\n\n        .map(\n\n          skill => `\n\n            <li>\n\n              <strong>\n                ${escapeHTML(\n                  skill\n                )}\n              </strong>\n\n              <span>\n                Needs more practical\n                experience.\n              </span>\n\n            </li>\n\n          `\n\n        )\n\n        .join(\"\")\n\n    : `<li>No major partial skills.</li>`;\n\n\n// ============================================================\n// 20. HTML - MISSING SKILLS\n// ============================================================\n\nconst missingHTML =\n\n  missingSkills.length > 0\n\n    ? missingSkills\n\n        .map(\n\n          skill => `\n\n            <li>\n\n              <strong>\n                ${escapeHTML(\n                  skill\n                )}\n              </strong>\n\n              <span>\n                Important skill that\n                is currently missing.\n              </span>\n\n            </li>\n\n          `\n\n        )\n\n        .join(\"\")\n\n    : `<li>No major missing skills.</li>`;\n\n\n// ============================================================\n// 21. HTML - ROADMAP\n// ============================================================\n\nconst roadmapSkills =\n  priorityGaps.slice(\n    0,\n    10\n  );\n\n\nconst roadmapHTML =\n\n  roadmapSkills.length > 0\n\n    ? roadmapSkills\n\n        .map(\n\n          (item, index) => `\n\n            <div class=\"roadmap-item\">\n\n              <div class=\"roadmap-number\">\n\n                ${index + 1}\n\n              </div>\n\n              <div>\n\n                <h4>\n\n                  ${escapeHTML(\n                    item.skill\n                  )}\n\n                </h4>\n\n                <p>\n\n                  ${\n                    item.status ===\n                    \"Missing\"\n\n                      ? \"Learn this skill from fundamentals and build a practical project.\"\n\n                      : \"Improve this skill through practical projects, coding exercises and interview preparation.\"\n                  }\n\n                </p>\n\n              </div>\n\n            </div>\n\n          `\n\n        )\n\n        .join(\"\")\n\n    : `<p>No major learning gaps detected.</p>`;\n\n\n// ============================================================\n// 22. HTML REPORT\n// ============================================================\n\nconst html = `\n\n<!DOCTYPE html>\n\n<html lang=\"en\">\n\n<head>\n\n<meta charset=\"UTF-8\">\n\n<meta\n  name=\"viewport\"\n  content=\"width=device-width, initial-scale=1.0\"\n>\n\n<title>\n  Skill Gap Analysis -\n  ${escapeHTML(roleKey)}\n</title>\n\n\n<style>\n\n/* =====================================================\n   GLOBAL\n   ===================================================== */\n\n* {\n  box-sizing: border-box;\n}\n\n\nbody {\n\n  margin: 0;\n\n  font-family:\n    Arial,\n    Helvetica,\n    sans-serif;\n\n  background:\n    #f4f7fb;\n\n  color:\n    #172033;\n\n}\n\n\n/* =====================================================\n   CONTAINER\n   ===================================================== */\n\n.container {\n\n  max-width:\n    1150px;\n\n  margin:\n    40px auto;\n\n  padding:\n    0 20px;\n\n}\n\n\n/* =====================================================\n   HEADER\n   ===================================================== */\n\n.header {\n\n  background:\n    linear-gradient(\n      135deg,\n      #111827,\n      #2563eb\n    );\n\n  color:\n    white;\n\n  padding:\n    45px;\n\n  border-radius:\n    20px;\n\n  margin-bottom:\n    25px;\n\n}\n\n\n.header h1 {\n\n  margin:\n    0 0 10px;\n\n  font-size:\n    34px;\n\n}\n\n\n.header p {\n\n  margin:\n    6px 0;\n\n  opacity:\n    .9;\n\n}\n\n\n/* =====================================================\n   SUMMARY CARDS\n   ===================================================== */\n\n.cards {\n\n  display:\n    grid;\n\n  grid-template-columns:\n    repeat(4, 1fr);\n\n  gap:\n    18px;\n\n  margin-bottom:\n    25px;\n\n}\n\n\n.card {\n\n  background:\n    white;\n\n  padding:\n    25px;\n\n  border-radius:\n    16px;\n\n  box-shadow:\n    0 5px 20px\n    rgba(\n      0,\n      0,\n      0,\n      .06\n    );\n\n}\n\n\n.card h3 {\n\n  margin:\n    0 0 10px;\n\n  font-size:\n    14px;\n\n  color:\n    #64748b;\n\n}\n\n\n.value {\n\n  font-size:\n    30px;\n\n  font-weight:\n    bold;\n\n}\n\n\n.score {\n\n  color:\n    #2563eb;\n\n}\n\n\n/* =====================================================\n   SECTIONS\n   ===================================================== */\n\n.section {\n\n  background:\n    white;\n\n  padding:\n    28px;\n\n  border-radius:\n    16px;\n\n  margin-bottom:\n    25px;\n\n  box-shadow:\n    0 5px 20px\n    rgba(\n      0,\n      0,\n      0,\n      .05\n    );\n\n}\n\n\n.section h2 {\n\n  margin-top:\n    0;\n\n  font-size:\n    22px;\n\n}\n\n\n/* =====================================================\n   TABLE\n   ===================================================== */\n\n.table-wrapper {\n\n  width:\n    100%;\n\n  overflow-x:\n    auto;\n\n}\n\n\ntable {\n\n  width:\n    100%;\n\n  border-collapse:\n    collapse;\n\n}\n\n\nth,\ntd {\n\n  text-align:\n    left;\n\n  padding:\n    14px;\n\n  border-bottom:\n    1px solid\n    #e5e7eb;\n\n}\n\n\nth {\n\n  background:\n    #f8fafc;\n\n  color:\n    #475569;\n\n}\n\n\n/* =====================================================\n   PROGRESS\n   ===================================================== */\n\n.progress {\n\n  width:\n    140px;\n\n  height:\n    8px;\n\n  background:\n    #e5e7eb;\n\n  border-radius:\n    10px;\n\n  overflow:\n    hidden;\n\n}\n\n\n.progress-bar {\n\n  height:\n    100%;\n\n  background:\n    #2563eb;\n\n  border-radius:\n    10px;\n\n}\n\n\n/* =====================================================\n   BADGES\n   ===================================================== */\n\n.badge {\n\n  display:\n    inline-block;\n\n  padding:\n    6px 11px;\n\n  border-radius:\n    20px;\n\n  font-size:\n    12px;\n\n  font-weight:\n    bold;\n\n}\n\n\n.badge.strong {\n\n  background:\n    #dcfce7;\n\n  color:\n    #166534;\n\n}\n\n\n.badge.partial {\n\n  background:\n    #fef3c7;\n\n  color:\n    #92400e;\n\n}\n\n\n.badge.missing {\n\n  background:\n    #fee2e2;\n\n  color:\n    #991b1b;\n\n}\n\n\n/* =====================================================\n   SKILL TAGS\n   ===================================================== */\n\n.skills {\n\n  display:\n    flex;\n\n  flex-wrap:\n    wrap;\n\n  gap:\n    10px;\n\n}\n\n\n.skill-tag {\n\n  background:\n    #dbeafe;\n\n  color:\n    #1e40af;\n\n  padding:\n    8px 13px;\n\n  border-radius:\n    20px;\n\n  font-size:\n    13px;\n\n}\n\n\n/* =====================================================\n   LIST\n   ===================================================== */\n\nul {\n\n  padding-left:\n    20px;\n\n}\n\n\nli {\n\n  margin-bottom:\n    13px;\n\n}\n\n\nli span {\n\n  display:\n    block;\n\n  color:\n    #64748b;\n\n  font-size:\n    13px;\n\n  margin-top:\n    4px;\n\n}\n\n\n/* =====================================================\n   ROADMAP\n   ===================================================== */\n\n.roadmap-item {\n\n  display:\n    flex;\n\n  gap:\n    15px;\n\n  padding:\n    18px 0;\n\n  border-bottom:\n    1px solid\n    #e5e7eb;\n\n}\n\n\n.roadmap-number {\n\n  width:\n    36px;\n\n  height:\n    36px;\n\n  border-radius:\n    50%;\n\n  background:\n    #2563eb;\n\n  color:\n    white;\n\n  display:\n    flex;\n\n  align-items:\n    center;\n\n  justify-content:\n    center;\n\n  font-weight:\n    bold;\n\n  flex-shrink:\n    0;\n\n}\n\n\n.roadmap-item h4 {\n\n  margin:\n    0 0 6px;\n\n}\n\n\n.roadmap-item p {\n\n  margin:\n    0;\n\n  color:\n    #64748b;\n\n}\n\n\n/* =====================================================\n   FOOTER\n   ===================================================== */\n\n.footer {\n\n  text-align:\n    center;\n\n  color:\n    #64748b;\n\n  font-size:\n    13px;\n\n  padding:\n    25px;\n\n}\n\n\n/* =====================================================\n   RESPONSIVE\n   ===================================================== */\n\n@media\n(max-width: 850px) {\n\n  .cards {\n\n    grid-template-columns:\n      repeat(2, 1fr);\n\n  }\n\n}\n\n\n@media\n(max-width: 550px) {\n\n  .cards {\n\n    grid-template-columns:\n      1fr;\n\n  }\n\n  .header {\n\n    padding:\n      28px;\n\n  }\n\n  .section {\n\n    padding:\n      20px;\n\n  }\n\n}\n\n</style>\n\n</head>\n\n\n<body>\n\n\n<div class=\"container\">\n\n\n<!-- =================================================\n     HEADER\n     ================================================= -->\n\n<div class=\"header\">\n\n  <h1>\n    Skill Gap Analysis\n  </h1>\n\n  <p>\n    AI-Powered Career Readiness Assessment\n  </p>\n\n  <p>\n\n    Target Role:\n\n    <strong>\n      ${escapeHTML(\n        roleKey\n      )}\n    </strong>\n\n  </p>\n\n</div>\n\n\n<!-- =================================================\n     SUMMARY\n     ================================================= -->\n\n<div class=\"cards\">\n\n\n  <div class=\"card\">\n\n    <h3>\n      Skill Match\n    </h3>\n\n    <div class=\"value score\">\n\n      ${score}%\n\n    </div>\n\n  </div>\n\n\n  <div class=\"card\">\n\n    <h3>\n      Required Skills\n    </h3>\n\n    <div class=\"value\">\n\n      ${comparison.length}\n\n    </div>\n\n  </div>\n\n\n  <div class=\"card\">\n\n    <h3>\n      Strong Skills\n    </h3>\n\n    <div class=\"value\">\n\n      ${strongSkills.length}\n\n    </div>\n\n  </div>\n\n\n  <div class=\"card\">\n\n    <h3>\n      Missing Skills\n    </h3>\n\n    <div class=\"value\">\n\n      ${missingSkills.length}\n\n    </div>\n\n  </div>\n\n\n</div>\n\n\n<!-- =================================================\n     READINESS\n     ================================================= -->\n\n<div class=\"section\">\n\n  <h2>\n    Job Readiness\n  </h2>\n\n  <h3>\n\n    ${escapeHTML(\n      jobReadiness\n    )}\n\n  </h3>\n\n  <p>\n\n    ${escapeHTML(\n      scoreMessage\n    )}\n\n  </p>\n\n</div>\n\n\n<!-- =================================================\n     SKILL COMPARISON\n     ================================================= -->\n\n<div class=\"section\">\n\n  <h2>\n    Skill Comparison\n  </h2>\n\n  <div class=\"table-wrapper\">\n\n    <table>\n\n      <thead>\n\n        <tr>\n\n          <th>\n            Skill\n          </th>\n\n          <th>\n            Current Level\n          </th>\n\n          <th>\n            Proficiency\n          </th>\n\n          <th>\n            Score\n          </th>\n\n          <th>\n            Status\n          </th>\n\n        </tr>\n\n      </thead>\n\n\n      <tbody>\n\n        ${skillRows}\n\n      </tbody>\n\n    </table>\n\n  </div>\n\n</div>\n\n\n<!-- =================================================\n     STRONG SKILLS\n     ================================================= -->\n\n<div class=\"section\">\n\n  <h2>\n    Strong Skills\n  </h2>\n\n  <div class=\"skills\">\n\n    ${strongHTML}\n\n  </div>\n\n</div>\n\n\n<!-- =================================================\n     PARTIAL SKILLS\n     ================================================= -->\n\n<div class=\"section\">\n\n  <h2>\n    Skills To Improve\n  </h2>\n\n  <ul>\n\n    ${partialHTML}\n\n  </ul>\n\n</div>\n\n\n<!-- =================================================\n     MISSING SKILLS\n     ================================================= -->\n\n<div class=\"section\">\n\n  <h2>\n    Missing Skills\n  </h2>\n\n  <ul>\n\n    ${missingHTML}\n\n  </ul>\n\n</div>\n\n\n<!-- =================================================\n     ROADMAP\n     ================================================= -->\n\n<div class=\"section\">\n\n  <h2>\n    Priority Learning Roadmap\n  </h2>\n\n  ${roadmapHTML}\n\n</div>\n\n\n<!-- =================================================\n     30 / 60 / 90\n     ================================================= -->\n\n<div class=\"section\">\n\n  <h2>\n    30 / 60 / 90 Day Plan\n  </h2>\n\n\n  <h3>\n    First 30 Days\n  </h3>\n\n  <ul>\n\n    ${\n      roadmap[\"30_Days\"]\n        .map(\n          skill =>\n            `<li>${escapeHTML(skill)}</li>`\n        )\n        .join(\"\")\n      ||\n      \"<li>Continue strengthening current skills.</li>\"\n    }\n\n  </ul>\n\n\n  <h3>\n    First 60 Days\n  </h3>\n\n  <ul>\n\n    ${\n      roadmap[\"60_Days\"]\n        .map(\n          skill =>\n            `<li>${escapeHTML(skill)}</li>`\n        )\n        .join(\"\")\n      ||\n      \"<li>Continue practical projects.</li>\"\n    }\n\n  </ul>\n\n\n  <h3>\n    First 90 Days\n  </h3>\n\n  <ul>\n\n    ${\n      roadmap[\"90_Days\"]\n        .map(\n          skill =>\n            `<li>${escapeHTML(skill)}</li>`\n        )\n        .join(\"\")\n      ||\n      \"<li>Prepare for interviews and real-world projects.</li>\"\n    }\n\n  </ul>\n\n</div>\n\n\n<!-- =================================================\n     FOOTER\n     ================================================= -->\n\n<div class=\"footer\">\n\n  Skill Gap Analyzer\n\n  <br><br>\n\n  Score is an estimated assessment based\n  on the configured requirements for the\n  selected job role.\n\n</div>\n\n\n</div>\n\n\n</body>\n\n</html>\n`;\n\n\n// ============================================================\n// 23. FINAL N8N OUTPUT\n// ============================================================\n\nreturn [\n\n  {\n\n    json: {\n\n      success: true,\n\n      targetRole:\n        roleKey,\n\n      score:\n        score,\n\n      jobReadiness:\n        jobReadiness,\n\n      scoreMessage:\n        scoreMessage,\n\n      totalRequiredSkills:\n        comparison.length,\n\n      strongSkills:\n        strongSkills,\n\n      partialSkills:\n        partialSkills,\n\n      missingSkills:\n        missingSkills,\n\n      priorityGaps:\n        priorityGaps,\n\n      learningPriority: {\n\n        high:\n          highPriority,\n\n        medium:\n          mediumPriority,\n\n        low:\n          lowPriority\n\n      },\n\n      roadmap:\n        roadmap,\n\n      skillComparison:\n        comparison,\n\n      html:\n        html\n\n    }\n\n  }\n\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        16
+      ],
+      "id": "f32b69e8-2e50-4008-a1ca-457dacf850c1",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "15r70pDwhxD-wPyhq9u653yNgchQpUv1KfkbIRZ3IxY0",
+          "mode": "list",
+          "cachedResultName": "Skill Gap Analyzer",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15r70pDwhxD-wPyhq9u653yNgchQpUv1KfkbIRZ3IxY0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15r70pDwhxD-wPyhq9u653yNgchQpUv1KfkbIRZ3IxY0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "success": "={{ $json.success }}",
+            "targetRole": "={{ $json.targetRole }}",
+            "score": "={{ $json.score }}",
+            "jobReadiness": "={{ $json.jobReadiness }}",
+            "scoreMessage": "={{ $json.scoreMessage }}",
+            "totalRequiredSkills": "={{ $json.totalRequiredSkills }}",
+            "strongSkills": "={{ $json.strongSkills.join(', ') }}",
+            "partialSkills": "={{ $json.partialSkills.join(', ') }}",
+            "missingSkills": "={{ $json.missingSkills.join(', ') }}",
+            "priorityGaps": "={{ $json.priorityGaps.map(x => x.skill + ' (' + x.importance + ')').join(', ') }}",
+            "learningPriority": "={{ JSON.stringify($json.learningPriority) }}",
+            "roadmap": "={{ JSON.stringify($json.roadmap) }}",
+            "skillComparison": "={{ JSON.stringify($json.skillComparison) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "success",
+              "displayName": "success",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "targetRole",
+              "displayName": "targetRole",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "jobReadiness",
+              "displayName": "jobReadiness",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "scoreMessage",
+              "displayName": "scoreMessage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "totalRequiredSkills",
+              "displayName": "totalRequiredSkills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "strongSkills",
+              "displayName": "strongSkills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "partialSkills",
+              "displayName": "partialSkills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "missingSkills",
+              "displayName": "missingSkills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "priorityGaps",
+              "displayName": "priorityGaps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "learningPriority",
+              "displayName": "learningPriority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "roadmap",
+              "displayName": "roadmap",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "skillComparison",
+              "displayName": "skillComparison",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        592,
+        16
+      ],
+      "id": "9ed64a86-eee3-46fa-9c37-8e6a28d0cfdd",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "75ff3e4b-9219-4a33-8ef8-5cf0aeae2126",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "zJS834ybsJVV2ike",
+  "tags": []
+}

@@ -1,0 +1,189 @@
+{
+  "name": "Form Submission Confirmation Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Form Submission Confirmation Bot",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Message",
+              "fieldType": "textarea",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "22d58c48-7aa6-4db2-b84a-c9b42bc9c456",
+      "name": "On form submission",
+      "webhookId": "a05d3744-6bbb-4f98-8487-9a4d2d1ee3a6"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "18f0809orNINpiq43hwG_hqltY7VGTO6-N-St2XCj_Bs",
+          "mode": "list",
+          "cachedResultName": "Form Submissions",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18f0809orNINpiq43hwG_hqltY7VGTO6-N-St2XCj_Bs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18f0809orNINpiq43hwG_hqltY7VGTO6-N-St2XCj_Bs/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.Name }}",
+            "Email": "={{ $json.Email }}",
+            "Message": "={{ $json.Message }}",
+            "Submitted at": "={{ $json.submittedAt }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Submitted at",
+              "displayName": "Submitted at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f9d8b711-a38b-458b-8447-100c1c1f9697",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.Email }}",
+        "subject": "welcome to our college",
+        "message": "=<!DOCTYPE html> <html> <head>   <meta charset=\"UTF-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"> </head>  <body style=\"margin:0; padding:0; background-color:#f4f6f8; font-family:Arial, Helvetica, sans-serif;\">    <div style=\"max-width:600px; margin:40px auto; background:#ffffff; border-radius:10px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.08);\">      <!-- Header -->     <div style=\"background:#1f2937; padding:25px 30px; text-align:center;\">       <h1 style=\"margin:0; color:#ffffff; font-size:24px;\">         Submission Received       </h1>       <p style=\"margin:8px 0 0; color:#d1d5db; font-size:14px;\">         Thank you for contacting us       </p>     </div>      <!-- Content -->     <div style=\"padding:30px;\">        <p style=\"font-size:16px; color:#333333;\">         Hello <strong>{{ $json.Name }}</strong>,       </p>        <p style=\"font-size:15px; line-height:1.6; color:#555555;\">         Thank you for contacting us. We have successfully received your         submission and recorded your information.       </p>        <!-- Submission Details -->       <div style=\"background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; padding:20px; margin:25px 0;\">          <h3 style=\"margin-top:0; color:#1f2937; font-size:17px;\">           Submission Details         </h3>          <p style=\"margin:10px 0; color:#555555;\">           <strong>Name:</strong> {{ $json.Name }}         </p>          <p style=\"margin:10px 0; color:#555555;\">           <strong>Email:</strong> {{ $json.Email }}         </p>          <p style=\"margin:10px 0; color:#555555;\">           <strong>Message:</strong><br>           {{ $json.Message }}         </p>          <p style=\"margin:10px 0; color:#555555;\">           <strong>Submitted At:</strong> {{ $json[\"Submitted at\"] }}         </p>        </div>        <p style=\"font-size:15px; line-height:1.6; color:#555555;\">         Our team will review your message and get back to you as soon as         possible. If any additional information is required, we will contact         you using the email address provided.       </p>        <p style=\"font-size:15px; color:#333333; margin-top:30px;\">         Thank you for reaching out to us.       </p>        <p style=\"font-size:15px; color:#333333;\">         Best regards,<br>         <strong>Rutvi Mistry</strong>       </p>      </div>      <!-- Footer -->     <div style=\"background:#f8fafc; border-top:1px solid #e5e7eb; padding:18px 30px; text-align:center;\">       <p style=\"margin:0; font-size:12px; color:#888888;\">         This is an automated confirmation email. Please do not reply to this email.       </p>     </div>    </div>  </body> </html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "074c82e7-a915-4ddb-87e2-889a765301a3",
+      "name": "Send a message",
+      "webhookId": "0bac67ec-e202-4327-a5ca-86f0ac30c428",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "M5CSfI9FduTu49ON",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4fc5b15c-386e-46be-9ef8-61889f3b9400",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "RJdfQa3llVcd5jDq",
+  "tags": []
+}

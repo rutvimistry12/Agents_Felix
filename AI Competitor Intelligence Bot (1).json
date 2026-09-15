@@ -1,0 +1,780 @@
+{
+  "name": "AI Competitor Intelligence Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "390a6bee-b750-45a0-a143-883cb06a1ed0",
+              "name": "competitor_name",
+              "value": "DesignPro Collage",
+              "type": "string"
+            },
+            {
+              "id": "388e02d4-d48d-4771-9786-308f2f5dcde1",
+              "name": "reviews",
+              "value": "[   {     \"rating\": 5,     \"review\": \"Excellent service! The overall experience was smooth and professional. The team was very helpful, responsive, and made the entire process easy to understand. The quality of service was impressive, and everything was completed efficiently. I would definitely recommend this service to others.\"   },   {     \"rating\": 4,     \"review\": \"Very good experience overall. The service was reliable, easy to use, and the support team was helpful whenever assistance was needed. Everything worked as expected, although there are a few areas that could be improved further. Overall, I am satisfied with the experience and would recommend it.\"   } ]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -288,
+        16
+      ],
+      "id": "93fb01ed-427c-4131-a796-63879c36d677",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -208,
+        224
+      ],
+      "id": "c59d72b5-0e51-48e6-bf11-831c2c5c4097",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this competitor:\n\nCompetitor Name: {{ $json.competitor_name }}\nReview:{{ $json.reviews }}\n\nProvide a short competitor analysis based on this information.",
+        "options": {
+          "systemMessage": "You are an AI Competitor Intelligence Analyst.\n\nAnalyze competitor information and customer reviews to provide a clear business-focused competitor analysis.\n\nFor each competitor, analyze:\n\n1. Competitor Name\n2. Overall Rating\n3. Customer Reviews\n4. Placement Rate / Hiring Rate\n5. Staff / Employee Experience\n6. Service Quality\n7. Strengths\n8. Weaknesses\n9. Customer Satisfaction\n10. Overall Competitor Score\n11. Key Insights\n12. Recommendations\n\nRules:\n- Base the analysis only on the information provided.\n- Do not invent placement rates, employee information, ratings, or facts.\n- If information is unavailable, return \"Not Available\".\n- Identify positive and negative points from reviews.\n- Summarize long reviews instead of repeating them.\n- Give an overall assessment based on the available information.\n- Keep the analysis clear and useful for business decision-making.\n- Return ONLY valid JSON.\n\nUse this JSON structure:\n\n{\n  \"competitor_name\": \"\",\n  \"rating\": 0,\n  \"review_summary\": \"\",\n  \"placement_rate\": \"Not Available\",\n  \"staff_experience\": \"Not Available\",\n  \"service_quality\": \"\",\n  \"strengths\": [],\n  \"weaknesses\": [],\n  \"customer_satisfaction\": \"\",\n  \"overall_score\": 0,\n  \"key_insights\": [],\n  \"recommendations\": []\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -64,
+        16
+      ],
+      "id": "fa9289ff-915a-4ed3-9840-0adc67d5d754",
+      "name": "Reviews analysis Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the sentiment of this competitor review.\n\nCompetitor Name: {{ $('Edit Fields').item.json.competitor_name }}\nRating: {{ $('Edit Fields').item.json.reviews[0].rating }}\nReview: {{ $('Edit Fields').item.json.reviews[0].review }}\n\nProvide the sentiment analysis for this review.",
+        "options": {
+          "systemMessage": "You are a Sentiment Analysis AI Agent.\n\nAnalyze the provided competitor customer review and determine its sentiment.\n\nAnalyze:\n- Competitor name\n- Rating\n- Review\n- Sentiment: Positive, Negative, or Neutral\n- Sentiment score from 0 to 100\n- Main emotion\n- Positive points\n- Negative points\n- Overall summary\n\nRules:\n- Analyze only the provided review.\n- Do not invent or assume information.\n- Use the rating and review together to determine sentiment.\n- Keep the analysis clear and concise.\n- Return ONLY valid JSON.\n- Do not use Markdown or extra explanations.\n\nReturn this exact JSON format:\n\n{\n  \"competitor_name\": \"\",\n  \"rating\": 0,\n  \"sentiment\": \"\",\n  \"sentiment_score\": 0,\n  \"emotion\": \"\",\n  \"positive_points\": [],\n  \"negative_points\": [],\n  \"summary\": \"\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        304,
+        16
+      ],
+      "id": "d88f9f6b-c3fe-4034-a45e-ac458cfd9201",
+      "name": "Sentiment analysis Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        176,
+        224
+      ],
+      "id": "c1e3130e-839b-4793-8af4-78a23d0a5387",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create a complete competitor review, sentiment, and SWOT analysis.\n\nCompetitor Name: {{ $('Edit Fields').item.json.competitor_name }}\n\n\nReview: {{ $('Edit Fields').item.json.reviews }}\n\nReview Analysis:{{ $json.output }}\n\n\nSentiment: {{ $json.output }}\n\nSentiment Score: {{ $json.sentiment_score }}\n\nEmotion: {{ $json.emotion }}\n\nPositive Points:\n{{ $json.positive_points }}\n\nNegative Points:\n{{ $json.negative_points }}\n\nAnalyze the review, sentiment, strengths, weaknesses, opportunities, threats, and overall competitor position.",
+        "options": {
+          "systemMessage": "You are a SWOT Analysis AI Agent.\n\nAnalyze the competitor using the provided competitor name, rating, customer review, review analysis, and sentiment analysis.\n\nYour analysis must include:\n\n1. Review Analysis\n- Overall review quality\n- Main positive points\n- Main negative points\n- Customer satisfaction\n- Important customer feedback\n\n2. Sentiment Analysis\n- Sentiment\n- Sentiment score\n- Main emotion\n- Positive sentiment indicators\n- Negative sentiment indicators\n\n3. SWOT Analysis\n- Strengths\n- Weaknesses\n- Opportunities\n- Threats\n\n4. Overall Competitor Position\n- Overall assessment\n- Key business insight\n\nRules:\n- Use only the information provided.\n- Do not invent facts.\n- Do not make unsupported assumptions.\n- Use the customer review and sentiment analysis to support the SWOT analysis.\n- Keep the analysis concise and business-focused.\n- Return ONLY valid JSON.\n- Do not use Markdown or explanations outside the JSON.\n\nReturn this exact JSON format:\n\n{\n  \"competitor_name\": \"\",\n  \"rating\": 0,\n\n  \"review_analysis\": {\n    \"summary\": \"\",\n    \"positive_points\": [],\n    \"negative_points\": [],\n    \"customer_satisfaction\": \"\"\n  },\n\n  \"sentiment_analysis\": {\n    \"sentiment\": \"\",\n    \"sentiment_score\": 0,\n    \"emotion\": \"\",\n    \"positive_indicators\": [],\n    \"negative_indicators\": []\n  },\n\n  \"swot_analysis\": {\n    \"strengths\": [],\n    \"weaknesses\": [],\n    \"opportunities\": [],\n    \"threats\": []\n  },\n\n  \"overall_position\": \"\",\n  \"key_insight\": \"\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        672,
+        16
+      ],
+      "id": "9b0a1dd6-a6cd-4d33-a7e9-88a668f3e34b",
+      "name": "Swot Analysis Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        544,
+        224
+      ],
+      "id": "3c3fa0d6-46bb-4c31-8f98-c217987df9e3",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1040,
+        16
+      ],
+      "id": "222ebfa1-87b4-4c1f-a9e2-200d7bdfffc8",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4e54ef2a-ef89-43c7-860c-1699df2c6f80",
+              "name": "competitor_name",
+              "value": "TechSkill Acedemy",
+              "type": "string"
+            },
+            {
+              "id": "c21ece99-940e-49eb-beba-b110299db42b",
+              "name": "reviews",
+              "value": "[   {     \"rating\": 5,     \"review\": \"Outstanding service with a smooth and professional experience. The staff was friendly, helpful, and responsive throughout the process. Highly recommended.\"   },   {     \"rating\": 2,     \"review\": \"The service was below expectations. There were delays and communication issues, and some problems were not resolved properly. The overall experience needs improvement.\"   } ]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1264,
+        16
+      ],
+      "id": "e70163f6-6029-4c71-a830-0038bfb3b939",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this competitor:\n\nCompetitor Name: {{ $json.competitor_name }}\nReview:{{ $json.reviews }}\n\nProvide a short competitor analysis based on this information.",
+        "options": {
+          "systemMessage": "You are an AI Competitor Intelligence Analyst.\n\nAnalyze competitor information and customer reviews to provide a clear business-focused competitor analysis.\n\nFor each competitor, analyze:\n\n1. Competitor Name\n2. Overall Rating\n3. Customer Reviews\n4. Placement Rate / Hiring Rate\n5. Staff / Employee Experience\n6. Service Quality\n7. Strengths\n8. Weaknesses\n9. Customer Satisfaction\n10. Overall Competitor Score\n11. Key Insights\n12. Recommendations\n\nRules:\n- Base the analysis only on the information provided.\n- Do not invent placement rates, employee information, ratings, or facts.\n- If information is unavailable, return \"Not Available\".\n- Identify positive and negative points from reviews.\n- Summarize long reviews instead of repeating them.\n- Give an overall assessment based on the available information.\n- Keep the analysis clear and useful for business decision-making.\n- Return ONLY valid JSON.\n\nUse this JSON structure:\n\n{\n  \"competitor_name\": \"\",\n  \"rating\": 0,\n  \"review_summary\": \"\",\n  \"placement_rate\": \"Not Available\",\n  \"staff_experience\": \"Not Available\",\n  \"service_quality\": \"\",\n  \"strengths\": [],\n  \"weaknesses\": [],\n  \"customer_satisfaction\": \"\",\n  \"overall_score\": 0,\n  \"key_insights\": [],\n  \"recommendations\": []\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1488,
+        16
+      ],
+      "id": "e7fe2717-69a2-4361-a4e0-bee12e52e6e1",
+      "name": "Review Analysis Agent1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        224
+      ],
+      "id": "682c96de-3b55-48ab-a428-ec2c38322157",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1728,
+        224
+      ],
+      "id": "0c29edf6-e39f-45d3-b548-a63807061354",
+      "name": "Google Gemini Chat Model4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the sentiment of this competitor review.\n\nCompetitor Name: {{ $('Edit Fields1').item.json.competitor_name }}\nRating: {{ $('Edit Fields1').item.json.reviews[0].rating }}\nReview: {{ $('Edit Fields1').item.json.reviews[0].review }}\n\nProvide the sentiment analysis for this review.",
+        "options": {
+          "systemMessage": "You are a Sentiment Analysis AI Agent.\n\nAnalyze the provided competitor customer review and determine its sentiment.\n\nAnalyze:\n- Competitor name\n- Rating\n- Review\n- Sentiment: Positive, Negative, or Neutral\n- Sentiment score from 0 to 100\n- Main emotion\n- Positive points\n- Negative points\n- Overall summary\n\nRules:\n- Analyze only the provided review.\n- Do not invent or assume information.\n- Use the rating and review together to determine sentiment.\n- Keep the analysis clear and concise.\n- Return ONLY valid JSON.\n- Do not use Markdown or extra explanations.\n\nReturn this exact JSON format:\n\n{\n  \"competitor_name\": \"\",\n  \"rating\": 0,\n  \"sentiment\": \"\",\n  \"sentiment_score\": 0,\n  \"emotion\": \"\",\n  \"positive_points\": [],\n  \"negative_points\": [],\n  \"summary\": \"\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1856,
+        16
+      ],
+      "id": "d9ac273a-2ce2-4757-a77e-ba1d33648335",
+      "name": "Sentiment Analysis AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2096,
+        224
+      ],
+      "id": "d049476f-5ad4-4de8-8d28-12dbd7b76813",
+      "name": "Google Gemini Chat Model5",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create a complete competitor review, sentiment, and SWOT analysis.\n\nCompetitor Name: {{ $('Edit Fields1').item.json.competitor_name }}\n\n\nReview: \n{{ $('Edit Fields1').item.json.reviews }}\nReview Analysis:{{ $json.output }}\n\n\nSentiment: {{ $json.output }}\n\nSentiment Score: {{ $json.sentiment_score }}\n\nEmotion: {{ $json.emotion }}\n\nPositive Points:\n{{ $json.positive_points }}\n\nNegative Points:\n{{ $json.negative_points }}\n\nAnalyze the review, sentiment, strengths, weaknesses, opportunities, threats, and overall competitor position.",
+        "options": {
+          "systemMessage": "You are a SWOT Analysis AI Agent.\n\nAnalyze the competitor using the provided competitor name, rating, customer review, review analysis, and sentiment analysis.\n\nYour analysis must include:\n\n1. Review Analysis\n- Overall review quality\n- Main positive points\n- Main negative points\n- Customer satisfaction\n- Important customer feedback\n\n2. Sentiment Analysis\n- Sentiment\n- Sentiment score\n- Main emotion\n- Positive sentiment indicators\n- Negative sentiment indicators\n\n3. SWOT Analysis\n- Strengths\n- Weaknesses\n- Opportunities\n- Threats\n\n4. Overall Competitor Position\n- Overall assessment\n- Key business insight\n\nRules:\n- Use only the information provided.\n- Do not invent facts.\n- Do not make unsupported assumptions.\n- Use the customer review and sentiment analysis to support the SWOT analysis.\n- Keep the analysis concise and business-focused.\n- Return ONLY valid JSON.\n- Do not use Markdown or explanations outside the JSON.\n\nReturn this exact JSON format:\n\n{\n  \"competitor_name\": \"\",\n  \"rating\": 0,\n\n  \"review_analysis\": {\n    \"summary\": \"\",\n    \"positive_points\": [],\n    \"negative_points\": [],\n    \"customer_satisfaction\": \"\"\n  },\n\n  \"sentiment_analysis\": {\n    \"sentiment\": \"\",\n    \"sentiment_score\": 0,\n    \"emotion\": \"\",\n    \"positive_indicators\": [],\n    \"negative_indicators\": []\n  },\n\n  \"swot_analysis\": {\n    \"strengths\": [],\n    \"weaknesses\": [],\n    \"opportunities\": [],\n    \"threats\": []\n  },\n\n  \"overall_position\": \"\",\n  \"key_insight\": \"\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2224,
+        16
+      ],
+      "id": "774ff6d0-18e1-4ff6-81c3-770337b49eb6",
+      "name": "SWOT Analysis AI Agent."
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Compare these two competitors based on their SWOT analysis.\n\nCompetitor 1:{{ $('Swot Analysis Agent').item.json.output }}\n\nCompetitor 2:{{ $json.output }}\n\nCompare their:\n- Strengths\n- Weaknesses\n- Opportunities\n- Threats\n- Overall position\n- Key advantages\n- Key disadvantages\n\nIdentify which competitor is stronger overall and explain why.\nReturn a clear comparison with actionable business insights.",
+        "options": {
+          "systemMessage": "You are a Competitor Comparison AI Agent.\n\nCompare exactly TWO competitors using their SWOT analysis and available review/sentiment information.\n\nComparison rules:\n\n1. Compare both competitors on:\n- Strengths\n- Weaknesses\n- Opportunities\n- Threats\n- Customer satisfaction\n- Review sentiment\n- Overall position\n\n2. Identify:\n- Which competitor has stronger strengths\n- Which has fewer weaknesses\n- Which has better opportunities\n- Which faces greater threats\n- Which has better customer sentiment\n- Which competitor is stronger overall\n\n3. Do not invent information.\n4. Use only the data provided for both competitors.\n5. If information is missing, write \"Not Available\".\n6. Do not automatically choose a winner just because one competitor has a higher rating.\n7. Consider all available factors before selecting the overall winner.\n8. Give a short reason for the winner.\n9. Provide practical business insights from the comparison.\n10. Return ONLY valid JSON.\n\nUse this exact format:\n\n{\n  \"competitor_1\": \"\",\n  \"competitor_2\": \"\",\n  \"comparison\": {\n    \"strengths\": \"\",\n    \"weaknesses\": \"\",\n    \"opportunities\": \"\",\n    \"threats\": \"\",\n    \"customer_satisfaction\": \"\",\n    \"sentiment\": \"\",\n    \"overall_position\": \"\"\n  },\n  \"winner\": \"\",\n  \"winner_reason\": \"\",\n  \"key_differences\": [],\n  \"business_insights\": [],\n  \"recommendation\": \"\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2592,
+        16
+      ],
+      "id": "b44974e3-424e-4097-a733-aa0e1c7d6c54",
+      "name": "Comparison AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2464,
+        224
+      ],
+      "id": "1f0ad9e5-74c8-48ad-a742-8617be8fcfbb",
+      "name": "Google Gemini Chat Model6",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json.output || $json.text || $json.content;\n\nlet data;\n\ntry {\n  data = typeof input === \"string\"\n    ? JSON.parse(input)\n    : input;\n} catch (error) {\n  return [{\n    json: {\n      success: false,\n      error: \"Invalid JSON from Comparison AI Agent\",\n      raw_output: input\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    success: true,\n\n    competitor_1: data.competitor_1 || \"Not Available\",\n    competitor_2: data.competitor_2 || \"Not Available\",\n\n    strengths: data.comparison?.strengths || \"Not Available\",\n    weaknesses: data.comparison?.weaknesses || \"Not Available\",\n    opportunities: data.comparison?.opportunities || \"Not Available\",\n    threats: data.comparison?.threats || \"Not Available\",\n\n    customer_satisfaction:\n      data.comparison?.customer_satisfaction || \"Not Available\",\n\n    sentiment:\n      data.comparison?.sentiment || \"Not Available\",\n\n    overall_position:\n      data.comparison?.overall_position || \"Not Available\",\n\n    winner: data.winner || \"Not Available\",\n\n    winner_reason:\n      data.winner_reason || \"Not Available\",\n\n    key_differences:\n      (data.key_differences || []).join(\"\\n• \"),\n\n    business_insights:\n      (data.business_insights || []).join(\"\\n• \"),\n\n    recommendation:\n      data.recommendation || \"Not Available\",\n\n    // Complete comparison story\n    comparison_story: `\nCOMPETITOR COMPARISON REPORT\n\n${data.competitor_1 || \"Competitor 1\"} vs ${data.competitor_2 || \"Competitor 2\"}\n\nSTRENGTHS\n${data.comparison?.strengths || \"Not Available\"}\n\nWEAKNESSES\n${data.comparison?.weaknesses || \"Not Available\"}\n\nOPPORTUNITIES\n${data.comparison?.opportunities || \"Not Available\"}\n\nTHREATS\n${data.comparison?.threats || \"Not Available\"}\n\nCUSTOMER SATISFACTION\n${data.comparison?.customer_satisfaction || \"Not Available\"}\n\nSENTIMENT\n${data.comparison?.sentiment || \"Not Available\"}\n\nOVERALL POSITION\n${data.comparison?.overall_position || \"Not Available\"}\n\nWINNER\n${data.winner || \"Not Available\"}\n\nWHY?\n${data.winner_reason || \"Not Available\"}\n\nKEY DIFFERENCES\n• ${(data.key_differences || []).join(\"\\n• \")}\n\nBUSINESS INSIGHTS\n• ${(data.business_insights || []).join(\"\\n• \")}\n\nRECOMMENDATION\n${data.recommendation || \"Not Available\"}\n`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2960,
+        16
+      ],
+      "id": "7ca44c83-ad4f-4d12-b476-29ed85fc348c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1YCm3KzXwYK9o0pyy6XpzjIo8YtzhIdEQM-n46679OIo",
+          "mode": "list",
+          "cachedResultName": "Competitor Intelligence Bot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YCm3KzXwYK9o0pyy6XpzjIo8YtzhIdEQM-n46679OIo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YCm3KzXwYK9o0pyy6XpzjIo8YtzhIdEQM-n46679OIo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "competitor_1": "={{ $json.competitor_1 }}",
+            "competitor_2": "={{ $json.competitor_2 }}",
+            "strengths": "={{ $json.strengths }}",
+            "weaknesses": "={{ $json.weaknesses }}",
+            "opportunities": "={{ $json.opportunities }}",
+            "threats": "={{ $json.threats }}",
+            "customer_satisfaction": "={{ $json.customer_satisfaction }}",
+            "sentiment": "={{ $json.sentiment }}",
+            "overall_position": "={{ $json.overall_position }}",
+            "winner": "={{ $json.winner }}",
+            "winner_reason": "={{ $json.winner_reason }}",
+            "key_differences": "={{ $json.key_differences }}",
+            "business_insights": "={{ $json.business_insights }}",
+            "recommendation": "={{ $json.recommendation }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "competitor_1",
+              "displayName": "competitor_1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "competitor_2",
+              "displayName": "competitor_2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "strengths",
+              "displayName": "strengths",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "weaknesses",
+              "displayName": "weaknesses",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "opportunities",
+              "displayName": "opportunities",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "threats",
+              "displayName": "threats",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_satisfaction",
+              "displayName": "customer_satisfaction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sentiment",
+              "displayName": "sentiment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "overall_position",
+              "displayName": "overall_position",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "winner",
+              "displayName": "winner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "winner_reason",
+              "displayName": "winner_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "key_differences",
+              "displayName": "key_differences",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "business_insights",
+              "displayName": "business_insights",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recommendation",
+              "displayName": "recommendation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3184,
+        16
+      ],
+      "id": "c99d9846-09f3-40ed-a909-8e0a2b6a5399",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        -176
+      ],
+      "id": "a83529bc-96ff-4d4f-b42e-cd00326b298b",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Reviews analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Reviews analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reviews analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Sentiment analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Sentiment analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sentiment analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Swot Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Swot Analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Swot Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Review Analysis Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Review Analysis Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Review Analysis Agent1": {
+      "main": [
+        [
+          {
+            "node": "Sentiment Analysis AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Sentiment Analysis AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sentiment Analysis AI Agent": {
+      "main": [
+        [
+          {
+            "node": "SWOT Analysis AI Agent.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "SWOT Analysis AI Agent.",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SWOT Analysis AI Agent.": {
+      "main": [
+        [
+          {
+            "node": "Comparison AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Comparison AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Comparison AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "998385f1-a00e-4715-803b-de2cb9678aef",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "cmHcx27TYRJ3SmQL",
+  "tags": []
+}

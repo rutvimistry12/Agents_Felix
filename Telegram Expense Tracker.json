@@ -1,0 +1,265 @@
+{
+  "name": "Telegram Expense Tracker",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -448,
+        16
+      ],
+      "id": "2ce44bb1-e8aa-4637-9be6-f81fe4cb6245",
+      "name": "Telegram Trigger",
+      "webhookId": "49d3b98c-5674-4cf0-b1f2-80b24e95aeff",
+      "credentials": {
+        "telegramApi": {
+          "id": "hbqTeMnegeHRjBSu",
+          "name": "agent9expense"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are an expense tracking assistant.\n\nExtract expense information from the user's message.\n\nReturn only valid JSON.\n\nRequired fields:\n- amount\n- category\n- description\n\nCategories must be one of:\nFood\nTransport\nShopping\nBills\nEntertainment\nHealth\nEducation\nTravel\nOther\n\nRules:\n- amount must be a number\n- category must be one of the allowed categories\n- description should briefly describe the expense\n- Do not include currency symbols in amount\n- If the message is not an expense, indicate that it is invalid"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -224,
+        16
+      ],
+      "id": "2dfe20cb-e599-4095-aa3e-57acdeeda0fd",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -368,
+        224
+      ],
+      "id": "826e7f76-2e02-4d60-9fff-1ae68127eaab",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1iLIFmdpZmkAEyeJu877ftW28trSLfwRu9iANDl2N1cY",
+          "mode": "list",
+          "cachedResultName": "Telegram Expense Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iLIFmdpZmkAEyeJu877ftW28trSLfwRu9iANDl2N1cY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iLIFmdpZmkAEyeJu877ftW28trSLfwRu9iANDl2N1cY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date\n": "={{ $json.date }}",
+            "Amount": "={{ $json.amount }}\n",
+            "Category": "={{ $json.category }}",
+            "Chat ID": "={{ $json.chatId }}",
+            "Description": "={{ $json.description }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date\n",
+              "displayName": "Date\n",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Amount",
+              "displayName": "Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chat ID",
+              "displayName": "Chat ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        144,
+        16
+      ],
+      "id": "09971203-da03-4ef1-8973-3e78dfe41d89",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Code in JavaScript').item.json.chatId }}",
+        "text": "=✅ Expense Added\n\n💰 Amount: ₹{{ $('Code in JavaScript').item.json.amount }}\n📂 Category: {{ $('Code in JavaScript').item.json.category }}\n📝 Description: {{ $('Code in JavaScript').item.json.description }}\n📅 Date: {{ $('Code in JavaScript').item.json.date }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        368,
+        16
+      ],
+      "id": "d690e913-ca1c-4f81-b756-3c481fcb6eb5",
+      "name": "Send a text message",
+      "webhookId": "1da21e5d-8b4b-4aeb-9a79-caf8950dc7db",
+      "credentials": {
+        "telegramApi": {
+          "id": "hbqTeMnegeHRjBSu",
+          "name": "agent9expense"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $json.output;\n\nconst cleanOutput = output\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\nconst expense = JSON.parse(cleanOutput);\n\nreturn [\n  {\n    json: {\n      amount: expense.amount,\n      category: expense.category,\n      description: expense.description,\n      date: new Date().toISOString().split('T')[0],\n      chatId: $('Telegram Trigger').item.json.message.chat.id\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        160
+      ],
+      "id": "fdb1c042-30ec-4b4e-8762-9f0140d59834",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "971ca24c-2f09-41d8-8f0e-dc71d9b67d76",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "8g8kcn4Z79MJgbPi",
+  "tags": []
+}

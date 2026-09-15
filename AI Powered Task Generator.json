@@ -1,0 +1,289 @@
+{
+  "name": "AI Powered Task Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -384,
+        -64
+      ],
+      "id": "a155b032-e250-4d3c-9993-83920d98290e",
+      "name": "Telegram Trigger",
+      "webhookId": "2923b654-d62e-4f5e-929c-c05587628f3a",
+      "credentials": {
+        "telegramApi": {
+          "id": "TYAl4j5pCaP427q4",
+          "name": "pro3_ai_task"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are an AI Task Generator.\n\nYour job is to generate practical and actionable tasks based on the user's request.\n\nIMPORTANT:\nYou MUST return ONLY valid JSON.\nDo not write greetings.\nDo not write explanations.\nDo not use Markdown.\nDo not write anything before or after the JSON.\n\nUse exactly this structure:\n\n{\n  \"tasks\": [\n    {\n      \"task_title\": \"Example task\",\n      \"description\": \"Clear description of what needs to be done\",\n      \"priority\": \"High\",\n      \"estimated_time\": \"1 hour\",\n      \"deadline\": \"Day 1\",\n      \"category\": \"Programming\"\n    }\n  ]\n}\n\nRules:\n\n1. Always return a \"tasks\" array.\n2. Each task must contain:\n   - task_title\n   - description\n   - priority\n   - estimated_time\n   - deadline\n   - category\n3. priority must be one of:\n   High\n   Medium\n   Low\n4. estimated_time must contain a realistic time.\n5. deadline must contain a date or Day 1, Day 2, etc.\n6. category should describe the task, such as:\n   Programming, AI, ML, Data Science, Study, Work, Personal, Project.\n7. Generate multiple tasks when the user asks for a plan.\n8. Return valid JSON only."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -160,
+        -64
+      ],
+      "id": "35839ee5-00b8-4f46-bf1f-0fdf68dbc67b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -304,
+        144
+      ],
+      "id": "61b656de-f3dc-4d40-9cfe-f3a4ea1cdb59",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get AI Agent output\nlet rawOutput = $json.output || \"\";\n\n// Remove accidental Markdown code fences\nrawOutput = rawOutput\n  .replace(/```json/gi, \"\")\n  .replace(/```/g, \"\")\n  .trim();\n\nlet data;\n\n// Try to parse JSON\ntry {\n  data = JSON.parse(rawOutput);\n} catch (error) {\n\n  // Try to find JSON object inside the AI response\n  const start = rawOutput.indexOf(\"{\");\n  const end = rawOutput.lastIndexOf(\"}\");\n\n  if (start !== -1 && end !== -1) {\n\n    const jsonText = rawOutput.substring(start, end + 1);\n\n    try {\n      data = JSON.parse(jsonText);\n    } catch (error2) {\n      throw new Error(\n        \"AI Agent did not return valid JSON. Please check the AI Agent prompt.\"\n      );\n    }\n\n  } else {\n    throw new Error(\n      \"AI Agent did not return JSON. Please check the AI Agent prompt.\"\n    );\n  }\n}\n\n// Get tasks\nconst tasks = data.tasks || [];\n\n// Convert tasks into separate n8n items\nreturn tasks.map((task, index) => {\n\n  return {\n    json: {\n      id: index + 1,\n      task_title: task.task_title || \"\",\n      description: task.description || \"\",\n      priority: task.priority || \"\",\n      estimated_time: task.estimated_time || \"\",\n      deadline: task.deadline || \"\",\n      category: task.category || \"\"\n    }\n  };\n\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        -64
+      ],
+      "id": "892648d0-715b-44ce-a350-f4c5f51ffe39",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "13A6KZjPQgYhUEwWkdeiMXeweeUUkYpg2_RwIYVsxCSA",
+          "mode": "list",
+          "cachedResultName": "AI powered task generator",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13A6KZjPQgYhUEwWkdeiMXeweeUUkYpg2_RwIYVsxCSA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13A6KZjPQgYhUEwWkdeiMXeweeUUkYpg2_RwIYVsxCSA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "task_title": "={{ $json.task_title }}",
+            "description": "={{ $json.description }}",
+            "priority": "={{ $json.priority }}",
+            "estimated_time": "={{ $json.estimated_time }}",
+            "deadline": "={{ $json.deadline }}",
+            "category": "={{ $json.category }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "task_title",
+              "displayName": "task_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estimated_time",
+              "displayName": "estimated_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deadline",
+              "displayName": "deadline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        432,
+        -64
+      ],
+      "id": "02bc5a99-0070-491c-8975-2c5000e5e351",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "={{ \n\"Learning Plan Generated Successfully\\n\\n\" +\n\"Goal: \" + $('Telegram Trigger').item.json.message.text + \"\\n\\n\" +\n\"Total Tasks Created: \" + $input.all().length + \"\\n\\n\" +\n\"All tasks have been saved to Google Sheets.\"\n}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        656,
+        -64
+      ],
+      "id": "7b0be7fa-980a-499f-80cf-65a52e684973",
+      "name": "Send a text message",
+      "webhookId": "3691d17f-41e7-4e80-ba5c-9e5fa6dedf3f",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "TYAl4j5pCaP427q4",
+          "name": "pro3_ai_task"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9e8513ed-0e0b-495d-9c66-94e87d004b8b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "0VKMlFx3E9JOj5dO",
+  "tags": []
+}

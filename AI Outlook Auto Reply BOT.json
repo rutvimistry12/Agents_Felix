@@ -1,0 +1,345 @@
+{
+  "name": "AI Outlook Auto Reply BOT",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -496,
+        -32
+      ],
+      "id": "84bc959c-dfa7-4968-a3bf-4ed852362a32",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 1,
+        "filtersUI": {
+          "values": {
+            "filters": {
+              "readStatus": "unread"
+            }
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        -32
+      ],
+      "id": "8e8fa61d-2bcf-47d1-9b5f-a8b4f9e15f9e",
+      "name": "Get many messages",
+      "webhookId": "2f68fe60-aade-4471-a703-4b55311bfdbb",
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "rswccnQ3iSt2rGeu",
+          "name": "outlookuse"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -48,
+        -32
+      ],
+      "id": "d0a93d57-0dc2-4df0-accb-a62701a84122",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Read the incoming email below and write a professional, polite, and natural reply.\n\nSender:\n{{ $json.from }}\n\nSubject:\n{{ $json.subject }}\nEmail:\n{{ $json.bodyPreview }}\n\nReply to the sender based only on the information provided.\n\nReturn ONLY the email reply.\nDo not include analysis, explanations, or labels.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an AI Email Auto-Reply Assistant.\n\nYour task is to read incoming Outlook emails and generate a professional, helpful, and natural reply.\n\nAnalyze:\n- Sender name\n- Sender email\n- Email subject\n- Email body\n- Previous conversation/context if available\n\nRules:\n1. Understand the sender's intent before replying.\n2. Reply only based on the information provided in the email.\n3. Do not invent facts, prices, dates, policies, attachments, or promises.\n4. Keep the reply professional, polite, concise, and human-like.\n5. Match the tone of the sender when appropriate.\n6. If the email asks a question and the answer is not available, politely state that the information is not available instead of guessing.\n7. Do not unnecessarily repeat the sender's entire email.\n8. Preserve important details such as names, dates, order numbers, meeting details, and requests.\n9. If the email is a greeting or simple message, respond naturally and briefly.\n10. If the email is a complaint, acknowledge the concern and provide a helpful response without making unsupported promises.\n11. If the email requires human approval or sensitive information, clearly indicate that it should be reviewed by a human.\n12. Do not include Markdown unless it improves readability.\n13. Return ONLY the email reply. Do not include analysis, explanations, or labels such as \"AI Reply\".\n\nThe reply should include:\n- Appropriate greeting\n- Direct response\n- Helpful next step when necessary\n- Professional closing"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        176,
+        -80
+      ],
+      "id": "eaba4dab-9087-4205-ae22-d099b11c23a5",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        176,
+        128
+      ],
+      "id": "75ae17f7-b9e6-4499-b947-dbe440ea7035",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"category\": \"string\",\n  \"reply\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        352,
+        128
+      ],
+      "id": "bfd29545-8911-4d4a-bb86-e25690460eaf",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1nshlUO3XnNglI7visXqaQBIQyOcSKLrcyDg1eG00RFY",
+          "mode": "list",
+          "cachedResultName": "AI outlook auto reply",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nshlUO3XnNglI7visXqaQBIQyOcSKLrcyDg1eG00RFY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nshlUO3XnNglI7visXqaQBIQyOcSKLrcyDg1eG00RFY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $now }}",
+            "Sender email": "={{ $('Get many messages').item.json.from }}",
+            "Subject": "={{ $('Get many messages').item.json.subject }}",
+            "Email message": "={{ $('Get many messages').item.json.bodyPreview }}",
+            "AI Reply": "={{ $json.output.reply }}",
+            "Category": "={{ $json.output.category }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sender email",
+              "displayName": "Sender email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email message",
+              "displayName": "Email message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AI Reply",
+              "displayName": "AI Reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        544,
+        -80
+      ],
+      "id": "d7aac5f5-9e67-4e33-b03f-de4e7edf72d8",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toRecipients": "={{ $json['Sender email'] }}",
+        "subject": "={{ $json.Subject }}",
+        "bodyContent": "={{ $json['AI Reply'] }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        768,
+        -80
+      ],
+      "id": "33f50322-f031-4c22-bc76-66cdb1a0e960",
+      "name": "Send a message",
+      "webhookId": "e2363155-643f-476a-b27d-215d1c53297f",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "rswccnQ3iSt2rGeu",
+          "name": "outlookuse"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c96ea4c9-4f07-45da-9315-e57563cbbfdb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "DRss51yvXwTH5fkS",
+  "tags": []
+}

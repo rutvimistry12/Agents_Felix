@@ -1,0 +1,330 @@
+{
+  "name": "Linkidn Job Alert Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -720,
+        -80
+      ],
+      "id": "f21c29d1-37a7-4a5e-bcf8-ae757d8b4a13",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "Datasets",
+        "datasetId": "kXdbaYjgEhABaGQnY",
+        "options": {},
+        "authentication": "apifyOAuth2Api"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        -80
+      ],
+      "id": "c70996f8-e92b-47c9-9c36-fe9c5b44e9bc",
+      "name": "Get dataset items",
+      "credentials": {
+        "apifyOAuth2Api": {
+          "id": "n4TDmoUdfsYHNR05",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const job = item.json;\n\n  return {\n    json: {\n      title: job.title || \"\",\n      company: job.companyName || \"\",\n      location: job.location || \"\",\n      link: job.link || \"\",\n      applyUrl: job.applyUrl || \"\",\n      description: job.descriptionText || \"\"\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        -80
+      ],
+      "id": "ebb6ff2a-50a8-4da3-95ba-8fa1a6081015",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create a professional 2-line summary for this job.\n\nJob Title: {{ $json.title }}\n\nCompany: {{ $json.company }}\n\nLocation: {{ $json.location }}\n\nDescription:\n{{ $json.description }}",
+        "options": {
+          "systemMessage": "You are a Job Summary Assistant.\n\nCreate a concise professional 2-line summary of the job.\n\nRules:\n- Use only the job information provided.\n- Do not invent information.\n- Mention the main responsibilities and opportunity.\n- Keep it professional and concise.\n- Return ONLY the summary.\n- Do not return JSON.\n- Do not add emojis.\n- Do not add headings."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -48,
+        -80
+      ],
+      "id": "63de84c0-0a33-4d34-8cf6-21fdd01c0aa6",
+      "name": "AI Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -192,
+        128
+      ],
+      "id": "510a1894-3093-49fa-9b9b-ce9672ffa672",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "114LMla1jUM-TVVV0wyb_owPj6EddyALanOHumpW3Ofk",
+          "mode": "list",
+          "cachedResultName": "Linkdin Job Alert",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/114LMla1jUM-TVVV0wyb_owPj6EddyALanOHumpW3Ofk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/114LMla1jUM-TVVV0wyb_owPj6EddyALanOHumpW3Ofk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "job title": "={{ $('Code in JavaScript').item.json.title }}",
+            "company": "={{ $('Code in JavaScript').item.json.company }}",
+            "locstion": "={{ $('Code in JavaScript').item.json.location }}",
+            "apply link": "={{ $('Code in JavaScript').item.json.link }}",
+            "summmary": "={{ $json.output }}",
+            "date": "={{ $('Get dataset items').item.json.postedAt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "job title",
+              "displayName": "job title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "locstion",
+              "displayName": "locstion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "apply link",
+              "displayName": "apply link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summmary",
+              "displayName": "summmary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        320,
+        -80
+      ],
+      "id": "34cec8d3-5aee-4977-9737-512fde673565",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const jobs = [];\n\nfor (const item of items) {\n\n  const job = item.json;\n\n  const title = job[\"job title\"] || \"\";\n  const company = job[\"company\"] || \"\";\n  const location = job[\"locstion\"] || \"\";\n  const link = job[\"apply link\"] || \"\";\n  const summary = job[\"summmary\"] || \"\";\n\n  jobs.push(`\n    <div style=\"\n      border:1px solid #ddd;\n      border-radius:10px;\n      padding:18px;\n      margin-bottom:15px;\n      font-family:Arial,sans-serif;\n    \">\n\n      <h2>${title || \"Job Opportunity\"}</h2>\n\n      <p>\n        <b>🏢 Company:</b> ${company || \"Not specified\"}\n      </p>\n\n      <p>\n        <b>📍 Location:</b> ${location || \"Not specified\"}\n      </p>\n\n      <p>\n        <b>📝 Summary:</b><br>\n        ${summary || \"No summary available\"}\n      </p>\n\n      <p>\n        <b>🔗 Apply:</b>\n        ${\n          link\n            ? `<a href=\"${link}\" target=\"_blank\">View Job & Apply</a>`\n            : \"Link not available\"\n        }\n      </p>\n\n    </div>\n  `);\n}\n\nreturn [\n  {\n    json: {\n      subject: `💼 ${jobs.length} New Job Alerts`,\n      message: `\n        <div style=\"font-family:Arial,sans-serif;max-width:700px;\">\n\n          <h1>💼 New Job Alerts</h1>\n\n          <p>Here are the latest job opportunities:</p>\n\n          ${jobs.join(\"\")}\n\n          <hr>\n\n          <p style=\"font-size:12px;color:#777;\">\n            This job alert was generated automatically.\n          </p>\n\n        </div>\n      `\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        -80
+      ],
+      "id": "002d3984-95f1-4965-8f12-c33b0398a3b2",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "sendTo": "rutvimistry12@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        768,
+        -80
+      ],
+      "id": "13f25d82-5855-406b-b288-30b0e1a2e059",
+      "name": "Send a message",
+      "webhookId": "738a5efd-6319-43f7-bba2-1a18a4bc3602",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zSsVwVZiAzpF61qb",
+          "name": "Gmail account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get dataset items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get dataset items": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "02eebe1a-c7fc-47b5-ab14-0a736d657b51",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "aG5UZGrYRnc4OXBG",
+  "tags": []
+}

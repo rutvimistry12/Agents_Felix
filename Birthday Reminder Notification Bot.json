@@ -1,0 +1,168 @@
+{
+  "name": "Birthday Reminder Notification Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -464,
+        0
+      ],
+      "id": "7e518746-417c-40db-a011-371144013615",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1WQl_MZWsodGy1ueg6L54tqr0DEv-48Row8uxyMsNMeQ",
+          "mode": "list",
+          "cachedResultName": "Birthday Wish Automation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WQl_MZWsodGy1ueg6L54tqr0DEv-48Row8uxyMsNMeQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WQl_MZWsodGy1ueg6L54tqr0DEv-48Row8uxyMsNMeQ/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "73d75a44-7bdb-4145-bbfb-bf7fac2431aa",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst today = new Date();\n\n// Today's month and date\nconst todayMonth = today.getMonth() + 1;\nconst todayDate = today.getDate();\n\nreturn items\n  .filter(item => {\n    const birthday = String(item.json.Birthday || \"\").trim();\n\n    if (!birthday) {\n      return false;\n    }\n\n    // Birthday format: YYYY-MM-DD\n    const parts = birthday.split(\"-\");\n\n    if (parts.length !== 3) {\n      return false;\n    }\n\n    const birthMonth = Number(parts[1]);\n    const birthDay = Number(parts[2]);\n\n    // Check birthday month and date\n    return birthMonth === todayMonth && birthDay === todayDate;\n  })\n  .map(item => ({\n    json: {\n      name: item.json.Name,\n      birthday: item.json.Birthday,\n      phone: item.json.Phone,\n      wishSent: item.json[\"Wish Sent\"],\n      birthdayWish: item.json[\"Birthday Wish\"]\n    }\n  }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "7a5a5bfc-c097-47b0-b04a-cf4f85092598",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create a personalized birthday wish for the person using the following information:\n\nName: {{ $json.name }}\n\nBirthday: {{ $json.birthday }}\n\nWrite a short, warm, friendly birthday message.\n\nRules:\n- Use the person's name.\n- Make the message natural and positive.\n- Include suitable birthday emojis 🎂🎉🎈.\n- Keep it under 40 words.\n- Return only the birthday wish.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a Birthday Wish Assistant.\n\nYour task is to create a short, warm, friendly, and personalized birthday wish for the person provided by the user.\n\nRules:\n\n* Use the person's name in the wish.\n* Make the message positive, natural, and friendly.\n* Include suitable birthday emojis such as 🎂🎉🎈🥳.\n* Keep the message between 20 and 40 words.\n* Do not include explanations or extra text.\n* Return only the final birthday wish.\n* Do not use markdown or quotation marks.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "e55f1020-aaba-4569-9d30-43d869ed00bc",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "82b9c448-dcec-4048-bae9-30262070d459",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4a676353-37aa-4a1a-b885-750ade6de6a7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "DHUgp7hpEyjGPCov",
+  "tags": []
+}

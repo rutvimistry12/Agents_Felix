@@ -1,0 +1,262 @@
+{
+  "name": "Email Generator Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Email Generator",
+        "formDescription": "Email Request Form\nFill out this form with your name, email address, subject, and the purpose of your request. Our AI-powered system will use the information you provide to generate a professional and personalized email. Please make sure the information you enter is accurate.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Full name"
+            },
+            {
+              "fieldLabel": "Recipient email",
+              "fieldType": "email"
+            },
+            {
+              "fieldLabel": "Purpose",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Leave Request"
+                  },
+                  {
+                    "option": "Internship Application "
+                  },
+                  {
+                    "option": "Job Application"
+                  },
+                  {
+                    "option": "Project Submission"
+                  },
+                  {
+                    "option": "Business Inquiry "
+                  },
+                  {
+                    "option": "Follow up "
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Tone",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Professional"
+                  },
+                  {
+                    "option": "Formal"
+                  },
+                  {
+                    "option": "Friendly"
+                  },
+                  {
+                    "option": "Casual"
+                  },
+                  {
+                    "option": "Polite"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Recipient Name"
+            },
+            {
+              "fieldLabel": "Additional Notes",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "77933066-dfda-4cb6-9851-6903a7848b24",
+      "name": "On form submission",
+      "webhookId": "5a3cf465-0e02-4b20-94d5-b1adb6db01dd"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.Purpose }}",
+        "options": {
+          "systemMessage": "You are a professional email writing assistant.\n\nCreate clear, polite, natural and professional emails from form submissions.\n\nRules:\n- Use the provided name.\n- Use the provided subject.\n- Use the provided purpose and message.\n- Do not invent information.\n- Keep the email concise.\n- Include a suitable greeting.\n- Include a professional closing.\n- Return only the email body.\n- Do not use markdown."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "4f8e6427-d284-4bfc-b367-e290ef64b031",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        208
+      ],
+      "id": "9172cc75-df0a-488f-880b-db67efc0b500",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nconst name = data[\"Full name\"] || \"\";\nconst email = data[\"Recipient email\"] || \"\";\nconst purpose = data[\"Purpose\"] || \"\";\nconst tone = data[\"Tone\"] || \"\";\nconst recipientName = data[\"Recipient Name\"] || \"\";\nconst additionalNotes = data[\"Additional Notes\"] || \"\";\n\nconst subject = purpose;\n\nconst emailPrompt = `\nWrite a professional email.\n\nSender Name: ${name}\nRecipient Email: ${email}\nRecipient Name: ${recipientName}\nPurpose: ${purpose}\nTone: ${tone}\nAdditional Notes: ${additionalNotes}\nSubject: ${subject}\n\nRequirements:\n- Use the requested tone.\n- Address the recipient by name.\n- Clearly communicate the purpose.\n- Use the additional notes.\n- Keep it concise and natural.\n- Include a greeting and professional closing.\n- Do not invent information.\n- Return only the email body.\n`.trim();\n\nreturn [{\n  json: {\n    name,\n    email,\n    recipientName,\n    purpose,\n    tone,\n    additionalNotes,\n    subject,\n    emailPrompt\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        0
+      ],
+      "id": "5697cc2c-5d72-4277-96eb-46d36effc07e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1w6CK7b2wqHqVJdrbSglPr2QXgVkIzl0Y8cBCLzzM8Wc",
+          "mode": "list",
+          "cachedResultName": "Email Generator Agent",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1w6CK7b2wqHqVJdrbSglPr2QXgVkIzl0Y8cBCLzzM8Wc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1w6CK7b2wqHqVJdrbSglPr2QXgVkIzl0Y8cBCLzzM8Wc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Subject": "={{ $json.subject }}",
+            "Email": "={{ $('AI Agent').item.json.output }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        0
+      ],
+      "id": "e98e32d3-6ef9-4f93-b7f5-902076da12df",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2e6e453b-346e-4f06-bffe-04a7abe480a9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "pP4qaPtxMOCrGvi7",
+  "tags": []
+}
