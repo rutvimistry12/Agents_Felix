@@ -1,0 +1,610 @@
+{
+  "name": "Social Media Content Reminder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ]
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -560,
+        -32
+      ],
+      "id": "5b1c8e5c-239d-4773-9397-26b631a81aff",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Lg72hrC6t3yBXE3w-dnNojRFGtsBO-n1b7HUC_0nlbU",
+          "mode": "list",
+          "cachedResultName": "Social Media Content Reminder",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Lg72hrC6t3yBXE3w-dnNojRFGtsBO-n1b7HUC_0nlbU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Lg72hrC6t3yBXE3w-dnNojRFGtsBO-n1b7HUC_0nlbU/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -320,
+        -32
+      ],
+      "id": "110609a8-1dc0-4d49-bd08-8e1b028b28d0",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const data = item.json;\n\n  const pending =\n    String(data.Status || \"\").trim().toLowerCase() === \"pending\";\n\n  return {\n    json: {\n      ...data,\n      reminder_sent: pending\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        -32
+      ],
+      "id": "afeedfe0-3ab6-463f-9721-14d0d5673f0e",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "91f6342a-c9f2-455f-bb56-9db5490cf007",
+              "leftValue": "={{ $json.reminder_sent }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        128,
+        -32
+      ],
+      "id": "f0e5ae4d-3b8b-474b-9ba1-224e25935ecd",
+      "name": "If",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "updates": [
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -576,
+        160
+      ],
+      "id": "a90be9cc-5177-4386-bb0c-0cbc58a0fd91",
+      "name": "Telegram Trigger",
+      "webhookId": "97d006f8-427e-4515-b106-d2e9e9f00037",
+      "credentials": {
+        "telegramApi": {
+          "id": "VY1NU5tWYs5YMFgX",
+          "name": "socialmediaremind"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=🔔 SOCIAL MEDIA REMINDER\n\n🆔 ID: {{ $json.ID }}\n📱 Platform: {{ $json.Platform }}\n📝 Content Type: {{ $json[\"Content Type\"] }}\n📌 Topic: {{ $json[\"Content Topic\"] }}\n✍️ Caption: {{ $json[\"Caption/Title\"] }}\n\n📅 Date: {{ $json[\"Scheduled Date\"] }}\n⏰ Time: {{ $json[\"Scheduled Time\"] }}\n\n⚠️ Status: Pending",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Posted",
+                    "additionalFields": {
+                      "callback_data": "={{ \"posted_\" + $json.ID }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        -48
+      ],
+      "id": "f866cb14-c25e-4551-9f30-5659b8982c98",
+      "name": "Send a text message",
+      "webhookId": "a133a20f-8238-4605-86e3-9fe454b25856",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VY1NU5tWYs5YMFgX",
+          "name": "socialmediaremind"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Lg72hrC6t3yBXE3w-dnNojRFGtsBO-n1b7HUC_0nlbU",
+          "mode": "list",
+          "cachedResultName": "Social Media Content Reminder",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Lg72hrC6t3yBXE3w-dnNojRFGtsBO-n1b7HUC_0nlbU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Lg72hrC6t3yBXE3w-dnNojRFGtsBO-n1b7HUC_0nlbU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Get row(s) in sheet').item.json.row_number }}",
+            "ID": "={{ $('Get row(s) in sheet').item.json.ID }}",
+            "Platform": "={{ $('Get row(s) in sheet').item.json.Platform }}",
+            "Content Type": "={{ $('Get row(s) in sheet').item.json['Content Type'] }}",
+            "Content Topic": "={{ $('Get row(s) in sheet').item.json['Content Topic'] }}",
+            "Caption/Title": "={{ $('Get row(s) in sheet').item.json['Caption/Title'] }}",
+            "Scheduled Date": "={{ $('Get row(s) in sheet').item.json['Scheduled Date'] }}",
+            "Scheduled Time": "={{ $('Get row(s) in sheet').item.json['Scheduled Time'] }}",
+            "Status": "={{ $('Get row(s) in sheet').item.json.Status }}",
+            "Reminder": "={{ $('Get row(s) in sheet').item.json.Reminder }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Platform",
+              "displayName": "Platform",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Content Type",
+              "displayName": "Content Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Content Topic",
+              "displayName": "Content Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Caption/Title",
+              "displayName": "Caption/Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Scheduled Date",
+              "displayName": "Scheduled Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Scheduled Time",
+              "displayName": "Scheduled Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reminder",
+              "displayName": "Reminder",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        -48
+      ],
+      "id": "94c5ca16-5dcd-4f4c-b7a4-2954d23788b9",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json.callback_query?.data || \"\";\n\nif (!data.startsWith(\"posted_\")) {\n  return [];\n}\n\nreturn [{\n  json: {\n    ID: data.replace(\"posted_\", \"\"),\n    Status: \"Posted\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        160
+      ],
+      "id": "9d87cb72-bfc3-49c4-be53-ad9cfa37e362",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Lg72hrC6t3yBXE3w-dnNojRFGtsBO-n1b7HUC_0nlbU",
+          "mode": "list",
+          "cachedResultName": "Social Media Content Reminder",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Lg72hrC6t3yBXE3w-dnNojRFGtsBO-n1b7HUC_0nlbU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Lg72hrC6t3yBXE3w-dnNojRFGtsBO-n1b7HUC_0nlbU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.ID }}",
+            "Status": "={{ $json.Status }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Platform",
+              "displayName": "Platform",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Content Type",
+              "displayName": "Content Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Content Topic",
+              "displayName": "Content Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Caption/Title",
+              "displayName": "Caption/Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Scheduled Date",
+              "displayName": "Scheduled Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Scheduled Time",
+              "displayName": "Scheduled Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Reminder",
+              "displayName": "Reminder",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -128,
+        160
+      ],
+      "id": "29a5ae56-c621-4a85-8930-d7b9ba1b2a9b",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $('Telegram Trigger').item.json.callback_query.id }}",
+        "additionalFields": {
+          "text": "COntent marked as posted successfully"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        96,
+        160
+      ],
+      "id": "ee34cf94-dfaf-4a4a-adb0-cc3028959e81",
+      "name": "Answer Query a callback",
+      "webhookId": "ab2152f6-87f8-4844-99da-ddd694cc301c",
+      "credentials": {
+        "telegramApi": {
+          "id": "VY1NU5tWYs5YMFgX",
+          "name": "socialmediaremind"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Answer Query a callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c194b710-6a01-4128-96e1-36e5c164c380",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "REDjuJLeQba8yGsh",
+  "tags": []
+}
