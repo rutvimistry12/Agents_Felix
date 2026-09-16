@@ -1,0 +1,247 @@
+{
+  "name": "AI Study Planner",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -512,
+        -64
+      ],
+      "id": "d53039bd-7304-4c0a-8734-caa10590bad2",
+      "name": "Telegram Trigger",
+      "webhookId": "378178a6-ff48-43ff-9da6-1526a4bc1daf",
+      "credentials": {
+        "telegramApi": {
+          "id": "tkYDSZk3mebnb7rZ",
+          "name": "aistudyagent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\n// Telegram message text\nconst text = String(data.message?.text || \"\");\n\nfunction extractField(field) {\n  const regex = new RegExp(\n    `${field}:\\\\s*(.*?)(?=\\\\n|$)`,\n    \"i\"\n  );\n\n  const match = text.match(regex);\n\n  return match ? match[1].trim() : \"\";\n}\n\nfunction extractList(field) {\n  const value = extractField(field);\n\n  if (!value) {\n    return [];\n  }\n\n  return value\n    .split(\",\")\n    .map(item => item.trim())\n    .filter(item => item.length > 0);\n}\n\nconst student = {\n  name: extractField(\"Student Name\"),\n\n  age: Number(extractField(\"Age\")) || null,\n\n  education: extractField(\"Education\"),\n\n  college: extractField(\"College\"),\n\n  stream: extractField(\"Stream\"),\n\n  subjects: extractList(\"Subjects\"),\n\n  academicGoal: extractField(\"Academic Goal\"),\n\n  dailyStudyTime: extractField(\"Daily Study Time\"),\n\n  preferredStudyTime: extractField(\"Preferred Study Time\"),\n\n  studyStyle: extractField(\"Study Style\"),\n\n  strongSubjects: extractList(\"Strong Subjects\"),\n\n  weakSubjects: extractList(\"Subjects Needing More Focus\"),\n\n  additionalGoals: extractList(\"Additional Goals\")\n};\n\nreturn [\n  {\n    json: student\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        -64
+      ],
+      "id": "736be5d5-0380-4545-90d0-5bd1aa55820a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create a complete personalized study plan using the student data below.\n\nStudent:\nName: {{ $json.name }}\nAge: {{ $json.age }}\nEducation: {{ $json.education }}\nCollege: {{ $json.college }}\nStream: {{ $json.stream }}\n\nSubjects:\n{{ $json.subjects }}\n\nAcademic Goal:\n{{ $json.academicGoal }}\n\nDaily Study Time:\n{{ $json.dailyStudyTime }}\n\nPreferred Study Time:\n{{ $json.preferredStudyTime }}\n\nStudy Style:\n{{ $json.studyStyle }}\n\nStrong Subjects:\n{{ $json.strongSubjects }}\n\nWeak Subjects:\n{{ $json.weakSubjects }}\n\nAdditional Goals:\n{{ $json.additionalGoals }}\n\nIMPORTANT:\n- Do not ask the student any questions.\n- Do not ask for exam dates.\n- Do not invent subjects or student information.\n- Use only the information provided above.\n- Create the study plan even if some optional information is missing.\n- Give extra attention to weak subjects.\n- Maintain strong subjects with regular practice.\n- Do not exceed the student's daily study time.\n\nReturn ONLY valid JSON using this structure:\n\n{\n  \"summary\": \"short personalized summary\",\n  \"daily_plan\": [\n    {\n      \"day\": \"Monday\",\n      \"time\": \"6:00 PM - 7:00 PM\",\n      \"subject\": \"Subject name\",\n      \"activity\": \"What to study\",\n      \"duration\": \"1 hour\",\n      \"priority\": \"High\"\n    }\n  ],\n  \"weekly_target\": [\n    \"target 1\",\n    \"target 2\",\n    \"target 3\"\n  ],\n  \"revision_plan\": \"revision strategy\",\n  \"progress_tracking\": \"how the student should track progress\"\n}",
+        "options": {
+          "systemMessage": "You are an AI Study Planner and Academic Assistant.\n\nYour job is to help students create, organize, and improve their study plans based on their academic information, goals, available study time, preferred study time, study style, strong subjects, weak subjects, and additional goals.\n\n## Main Responsibilities\n\n1. Analyze the student's information carefully.\n2. Create a realistic and personalized study schedule.\n3. Give more attention to weak subjects while maintaining strong subjects.\n4. Consider the student's daily study time and preferred study time.\n5. Break large academic goals into smaller daily and weekly tasks.\n6. Include revision, practice, assignments, tests, and breaks.\n7. Prioritize upcoming exams, deadlines, and important subjects when those details are provided.\n8. Avoid creating an unrealistic schedule that exceeds the student's available study time.\n9. Adapt the plan whenever the student provides updated progress or changes in availability.\n10. Encourage consistency and practical progress rather than excessive study hours.\n\n## Planning Rules\n\n* Use the student's available daily study time as the maximum planning limit.\n* Prioritize weak subjects and important upcoming academic tasks.\n* Use strong subjects for maintenance and revision.\n* Include short breaks between longer study sessions.\n* Use the student's preferred study time whenever possible.\n* If the student has limited study time, prioritize high-impact topics.\n* If no specific exam or deadline is provided, create a balanced study plan.\n* If important information is missing, ask only for the information necessary to create a useful plan.\n* Never assume a subject, exam date, deadline, or study duration that the student has not provided.\n\n## Study Plan Structure\n\nWhen creating a plan, provide:\n\n* Overall academic goal\n* Weekly focus\n* Daily schedule\n* Subject/topic\n* Study activity\n* Estimated duration\n* Priority\n* Revision/practice tasks\n* Breaks\n* Daily target\n* Weekly review\n\n## Progress Tracking\n\nWhen the student reports progress:\n\n* Mark completed tasks as completed.\n* Identify pending tasks.\n* Identify missed or delayed tasks.\n* Adjust future tasks without unnecessarily overloading the student.\n* Suggest revision for topics where the student is struggling.\n* Maintain a balance between new learning and revision.\n\n## Response Style\n\nBe:\n\n* Clear\n* Practical\n* Friendly\n* Encouraging\n* Beginner-friendly\n* Concise but useful\n\nUse tables when they make the study schedule easier to understand.\n\nAlways focus on helping the student build a sustainable study routine.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -64,
+        -64
+      ],
+      "id": "214716bb-ba8c-4421-954b-ab1d1c29af32",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -208,
+        144
+      ],
+      "id": "c293ac08-91b6-46e9-b0b6-22730ca87ffd",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "20804a02-e442-43bb-8ed2-88c2a6032b5c",
+              "name": "html",
+              "value": "=<!DOCTYPE html>\n<html lang=\"en\">\n\n<head>\n\n<meta charset=\"UTF-8\">\n\n<meta name=\"viewport\"\n      content=\"width=device-width, initial-scale=1.0\">\n\n<title>AI Study Planner</title>\n\n<style>\n\n* {\n  box-sizing: border-box;\n}\n\nbody {\n  margin: 0;\n  padding: 30px;\n  background: #f4f6f8;\n  font-family: Arial, sans-serif;\n  color: #222;\n}\n\n.container {\n  max-width: 1100px;\n  margin: auto;\n}\n\n.header {\n  background: white;\n  padding: 30px;\n  border-radius: 15px;\n  margin-bottom: 20px;\n  text-align: center;\n  box-shadow: 0 3px 12px rgba(0,0,0,0.08);\n}\n\n.header h1 {\n  margin: 0 0 10px;\n  font-size: 30px;\n}\n\n.header p {\n  color: #666;\n  margin: 0;\n}\n\n.card {\n  background: white;\n  padding: 25px;\n  border-radius: 15px;\n  margin-bottom: 20px;\n  box-shadow: 0 3px 12px rgba(0,0,0,0.06);\n}\n\n.card h2 {\n  margin-top: 0;\n  margin-bottom: 20px;\n}\n\n.info-grid {\n  display: grid;\n  grid-template-columns: repeat(2, 1fr);\n  gap: 15px;\n}\n\n.info-box {\n  background: #f8f9fa;\n  padding: 15px;\n  border-radius: 10px;\n}\n\n.label {\n  display: block;\n  font-size: 13px;\n  color: #777;\n  margin-bottom: 6px;\n}\n\n.value {\n  font-size: 16px;\n  font-weight: 600;\n}\n\n.summary {\n  background: #f8f9fa;\n  padding: 18px;\n  border-radius: 10px;\n  line-height: 1.7;\n}\n\n.tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n\n.tag {\n  background: #e9ecef;\n  padding: 8px 14px;\n  border-radius: 20px;\n  font-size: 14px;\n}\n\n.strong {\n  background: #d1e7dd;\n  color: #0f5132;\n}\n\n.weak {\n  background: #f8d7da;\n  color: #842029;\n}\n\ntable {\n  width: 100%;\n  border-collapse: collapse;\n  margin-top: 10px;\n}\n\nth {\n  background: #f1f3f5;\n  padding: 14px;\n  text-align: left;\n}\n\ntd {\n  padding: 14px;\n  border-bottom: 1px solid #ddd;\n  vertical-align: top;\n}\n\n.priority {\n  font-weight: bold;\n}\n\n.high {\n  color: #d63031;\n}\n\n.medium {\n  color: #e67e22;\n}\n\n.low {\n  color: #27ae60;\n}\n\n.target {\n  background: #f8f9fa;\n  padding: 15px;\n  margin-bottom: 10px;\n  border-radius: 8px;\n}\n\n.footer {\n  text-align: center;\n  color: #777;\n  padding: 20px;\n  font-size: 13px;\n}\n\n@media (max-width: 700px) {\n\n  body {\n    padding: 15px;\n  }\n\n  .info-grid {\n    grid-template-columns: 1fr;\n  }\n\n  table {\n    font-size: 13px;\n  }\n\n  th,\n  td {\n    padding: 9px;\n  }\n\n}\n\n</style>\n\n</head>\n\n\n<body>\n\n<div class=\"container\">\n\n\n<!-- HEADER -->\n\n<div class=\"header\">\n\n<h1>📚 AI Study Planner</h1>\n\n<p>\nPersonalized Study Plan Generated by AI\n</p>\n\n</div>\n\n\n<!-- STUDENT DETAILS -->\n\n<div class=\"card\">\n\n<h2>👤 Student Details</h2>\n\n<div class=\"info-grid\">\n\n\n<div class=\"info-box\">\n\n<span class=\"label\">Name</span>\n\n<span class=\"value\">\n{{ $json.name }}\n</span>\n\n</div>\n\n\n<div class=\"info-box\">\n\n<span class=\"label\">Age</span>\n\n<span class=\"value\">\n{{ $json.age }}\n</span>\n\n</div>\n\n\n<div class=\"info-box\">\n\n<span class=\"label\">Education</span>\n\n<span class=\"value\">\n{{ $json.education }}\n</span>\n\n</div>\n\n\n<div class=\"info-box\">\n\n<span class=\"label\">College</span>\n\n<span class=\"value\">\n{{ $json.college }}\n</span>\n\n</div>\n\n\n<div class=\"info-box\">\n\n<span class=\"label\">Stream</span>\n\n<span class=\"value\">\n{{ $json.stream }}\n</span>\n\n</div>\n\n\n<div class=\"info-box\">\n\n<span class=\"label\">Daily Study Time</span>\n\n<span class=\"value\">\n{{ $json.dailyStudyTime }}\n</span>\n\n</div>\n\n\n<div class=\"info-box\">\n\n<span class=\"label\">Preferred Study Time</span>\n\n<span class=\"value\">\n{{ $json.preferredStudyTime }}\n</span>\n\n</div>\n\n\n<div class=\"info-box\">\n\n<span class=\"label\">Study Style</span>\n\n<span class=\"value\">\n{{ $json.studyStyle }}\n</span>\n\n</div>\n\n\n</div>\n\n</div>\n\n\n<!-- SUBJECTS -->\n\n<div class=\"card\">\n\n<h2>📖 Subjects</h2>\n\n<div class=\"tags\">\n\n{{\n  Array.isArray($json.subjects)\n  ? $json.subjects.map(subject =>\n      `<span class=\"tag\">${subject}</span>`\n    ).join('')\n  : `<span class=\"tag\">${$json.subjects}</span>`\n}}\n\n</div>\n\n</div>\n\n\n<!-- ACADEMIC GOAL -->\n\n<div class=\"card\">\n\n<h2>🎯 Academic Goal</h2>\n\n<div class=\"summary\">\n\n{{ $json.academicGoal }}\n\n</div>\n\n</div>\n\n\n<!-- SUBJECT ANALYSIS -->\n\n<div class=\"card\">\n\n<h2>📊 Subject Analysis</h2>\n\n<div class=\"info-grid\">\n\n\n<div class=\"info-box\">\n\n<span class=\"label\">\n💪 Strong Subjects\n</span>\n\n<div class=\"tags\">\n\n{{\n  Array.isArray($json.strongSubjects)\n  ? $json.strongSubjects.map(subject =>\n      `<span class=\"tag strong\">${subject}</span>`\n    ).join('')\n  : `<span class=\"tag strong\">${$json.strongSubjects}</span>`\n}}\n\n</div>\n\n</div>\n\n\n<div class=\"info-box\">\n\n<span class=\"label\">\n⚠️ Weak Subjects\n</span>\n\n<div class=\"tags\">\n\n{{\n  Array.isArray($json.weakSubjects)\n  ? $json.weakSubjects.map(subject =>\n      `<span class=\"tag weak\">${subject}</span>`\n    ).join('')\n  : `<span class=\"tag weak\">${$json.weakSubjects}</span>`\n}}\n\n</div>\n\n</div>\n\n\n</div>\n\n</div>\n\n\n<!-- ADDITIONAL GOALS -->\n\n<div class=\"card\">\n\n<h2>🚀 Additional Goals</h2>\n\n<div class=\"summary\">\n\n{{\n  Array.isArray($json.additionalGoals)\n  ? $json.additionalGoals.map(goal =>\n      `<div class=\"target\">✓ ${goal}</div>`\n    ).join('')\n  : `<div class=\"target\">${$json.additionalGoals}</div>`\n}}\n\n</div>\n\n</div>\n\n\n<!-- AI SUMMARY -->\n\n<div class=\"card\">\n\n<h2>🤖 AI Recommendation</h2>\n\n<div class=\"summary\">\n\n{{ $json.summary }}\n\n</div>\n\n</div>\n\n\n<!-- DAILY PLAN -->\n\n<div class=\"card\">\n\n<h2>📅 Daily Study Plan</h2>\n\n<table>\n\n<thead>\n\n<tr>\n\n<th>Day</th>\n\n<th>Time</th>\n\n<th>Subject</th>\n\n<th>Activity</th>\n\n<th>Duration</th>\n\n<th>Priority</th>\n\n</tr>\n\n</thead>\n\n\n<tbody>\n\n{{\n  $json.daily_plan.map(item => `\n  \n  <tr>\n\n    <td>${item.day}</td>\n\n    <td>${item.time}</td>\n\n    <td>${item.subject}</td>\n\n    <td>${item.activity}</td>\n\n    <td>${item.duration}</td>\n\n    <td class=\"priority ${String(item.priority).toLowerCase()}\">\n      ${item.priority}\n    </td>\n\n  </tr>\n\n  `).join('')\n}}\n\n</tbody>\n\n</table>\n\n</div>\n\n\n<!-- WEEKLY TARGET -->\n\n<div class=\"card\">\n\n<h2>🎯 Weekly Targets</h2>\n\n{{\n  $json.weekly_target.map(target =>\n    `<div class=\"target\">✓ ${target}</div>`\n  ).join('')\n}}\n\n</div>\n\n\n<!-- REVISION -->\n\n<div class=\"card\">\n\n<h2>🔄 Revision Plan</h2>\n\n<div class=\"summary\">\n\n{{ $json.revision_plan }}\n\n</div>\n\n</div>\n\n\n<!-- PROGRESS -->\n\n<div class=\"card\">\n\n<h2>✅ Progress Tracking</h2>\n\n<div class=\"summary\">\n\n{{ $json.progress_tracking }}\n\n</div>\n\n</div>\n\n\n<div class=\"footer\">\n\nAI Study Planner • Personalized Learning Plan\n\n</div>\n\n\n</div>\n\n</body>\n\n</html>",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        304,
+        -64
+      ],
+      "id": "2f5ac6e6-4f35-4a97-97b9-879732fa1ede",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "html",
+        "options": {
+          "fileName": "studyplanner.html"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        528,
+        -64
+      ],
+      "id": "a4e942f7-ba3c-476e-87e2-bcc7c2e51caa",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "6424720049",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        752,
+        -64
+      ],
+      "id": "147b2139-ea54-47a8-9d84-91f58e470e79",
+      "name": "Send a document",
+      "webhookId": "7c0411c9-f655-48a5-9f7e-e21391ffd3f5",
+      "credentials": {
+        "telegramApi": {
+          "id": "tkYDSZk3mebnb7rZ",
+          "name": "aistudyagent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiOutput = $input.first().json.output;\n\n// Remove markdown code fences if Gemini adds them\nconst cleanedOutput = aiOutput\n  .replace(/^```json\\s*/i, '')\n  .replace(/^```\\s*/i, '')\n  .replace(/\\s*```$/i, '')\n  .trim();\n\n// Convert AI JSON string into a real JavaScript object\nlet plan;\n\ntry {\n  plan = JSON.parse(cleanedOutput);\n} catch (error) {\n  throw new Error(\n    \"AI Agent did not return valid JSON. Output was: \" + aiOutput\n  );\n}\n\n// Get original student information\nconst student = $('Code in JavaScript').first().json;\n\nreturn [\n  {\n    json: {\n      name: student.name,\n      age: student.age,\n      education: student.education,\n      college: student.college,\n      stream: student.stream,\n      subjects: student.subjects,\n      academicGoal: student.academicGoal,\n      dailyStudyTime: student.dailyStudyTime,\n      preferredStudyTime: student.preferredStudyTime,\n      studyStyle: student.studyStyle,\n      strongSubjects: student.strongSubjects,\n      weakSubjects: student.weakSubjects,\n      additionalGoals: student.additionalGoals,\n\n      summary: plan.summary,\n      daily_plan: plan.daily_plan,\n      weekly_target: plan.weekly_target,\n      revision_plan: plan.revision_plan,\n      progress_tracking: plan.progress_tracking\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        80
+      ],
+      "id": "795712ee-1af4-44d6-af15-d33f408d0faa",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Send a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9495d93a-4aeb-430b-8b5d-c752f9dc9049",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "AY5I6ezuSQ18Cmsd",
+  "tags": []
+}
