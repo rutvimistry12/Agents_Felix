@@ -1,0 +1,546 @@
+{
+  "name": "Automated Delivery Certificate System",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c10e66ac-6106-4721-bdb0-872ff4fbc9c2",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1-_xc3rDG6x7mZlZ3Wh1zu2bT1LJjbT0uR0F2BFs_Epo",
+          "mode": "list",
+          "cachedResultName": "Automated Certificate Delivery System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-_xc3rDG6x7mZlZ3Wh1zu2bT1LJjbT0uR0F2BFs_Epo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-_xc3rDG6x7mZlZ3Wh1zu2bT1LJjbT0uR0F2BFs_Epo/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "e0568d6d-abad-4b60-83aa-006eb9934ea1",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "5c08c390-6d93-4bad-8526-206436f98625",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "10549a71-67a9-425d-9424-7c10947d7e11",
+              "name": "Name",
+              "value": "={{ $json.student_name }}",
+              "type": "string"
+            },
+            {
+              "id": "a79e7c93-07c7-40fd-9002-4b1ab8412605",
+              "name": "Email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "d8d04658-3775-4d5a-9a3f-9727f9252c01",
+              "name": "Course",
+              "value": "={{ $json.course_name }}",
+              "type": "string"
+            },
+            {
+              "id": "eb84c9f1-7e38-4969-8f00-46b07c956579",
+              "name": "Date",
+              "value": "={{ $json.completion_date }}",
+              "type": "string"
+            },
+            {
+              "id": "6c3198e0-31fa-4a83-a690-8bbfe768935a",
+              "name": "Row id",
+              "value": "={{ $json.row_number }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        672,
+        0
+      ],
+      "id": "caac2a9e-62dd-4689-9ddb-ec06b704c027",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "1LNR_gn39lrDbsArsO1OoM7t364bIbkYXeaeisKDxW0U",
+          "mode": "id"
+        },
+        "name": "={{ $json.Name }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        896,
+        0
+      ],
+      "id": "cea56535-2377-42bf-b4ec-f46484b98150",
+      "name": "Copy file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3MPy9hFCjEhOCi5m",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "{{student_name}}",
+              "replaceText": "={{ $('Edit Fields').item.json.Name }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{course_name}}",
+              "replaceText": "={{ $('Edit Fields').item.json.Course }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{completion_date}}",
+              "replaceText": "={{ $('Edit Fields').item.json.Date }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{certificate_id}}",
+              "replaceText": "={{ $('Edit Fields').item.json['Row id'] }}",
+              "matchCase": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "33a2dde0-bc36-4f2b-8351-d3baefe6410c",
+      "name": "Update a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "4DfNrSpwcRijj92G",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Copy file').item.json.id }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        0
+      ],
+      "id": "91ce66af-2856-49b5-a4d5-ec1e5265f1ef",
+      "name": "Share file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3MPy9hFCjEhOCi5m",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1b53244-e5ef-43e8-b1d0-4e24a275c95e",
+              "name": "Certificate Link",
+              "value": "=https://docs.google.com/document/d/{{ $('Copy file').item.json.id }}/edit",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1568,
+        0
+      ],
+      "id": "d5d7e208-9615-4dce-bbdc-cc63adbfb7aa",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1-_xc3rDG6x7mZlZ3Wh1zu2bT1LJjbT0uR0F2BFs_Epo",
+          "mode": "list",
+          "cachedResultName": "Automated Certificate Delivery System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-_xc3rDG6x7mZlZ3Wh1zu2bT1LJjbT0uR0F2BFs_Epo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-_xc3rDG6x7mZlZ3Wh1zu2bT1LJjbT0uR0F2BFs_Epo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Get row(s) in sheet').item.json.row_number }}",
+            "student_name": "={{ $('Get row(s) in sheet').item.json.student_name }}",
+            "Certificate Link": "={{ $json['Certificate Link'] }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "certificate_id",
+              "displayName": "certificate_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "student_name",
+              "displayName": "student_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "course_name",
+              "displayName": "course_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "completion_date",
+              "displayName": "completion_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "certificate_type",
+              "displayName": "certificate_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Certificate Link",
+              "displayName": "Certificate Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_status",
+              "displayName": "delivery_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_date",
+              "displayName": "delivery_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reminder_required",
+              "displayName": "reminder_required",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "C",
+              "displayName": "C",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1792,
+        0
+      ],
+      "id": "8a4b8759-f749-450a-a298-6732cb4efa1f",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Loop Over Items').item.json.email }}",
+        "subject": "=Your Certificate – {{ $('Loop Over Items').item.json.student_name }}",
+        "message": "=Dear {{ $('Loop Over Items').item.json.student_name }},  <p>Congratulations!</p>  <p>We are pleased to inform you that you have successfully completed the <strong>{{ $('Loop Over Items').item.json.course_name }}</strong> course.</p>  <p>Your Certificate of Completion has been issued with the following details:</p>  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">   <tr>     <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Student Name</strong></td>     <td style=\"padding: 8px; border: 1px solid #ddd;\">{{ $('Loop Over Items').item.json.student_name }}</td>   </tr>   <tr>     <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Course</strong></td>     <td style=\"padding: 8px; border: 1px solid #ddd;\">{{ $('Loop Over Items').item.json.course_name }}</td>   </tr>   <tr>     <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Certificate ID</strong></td>     <td style=\"padding: 8px; border: 1px solid #ddd;\">{{ $('Loop Over Items').item.json.certificate_id }}</td>   </tr>   <tr>     <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Completion Date</strong></td>     <td style=\"padding: 8px; border: 1px solid #ddd;\">{{ $('Loop Over Items').item.json.completion_date }}</td>   </tr> </table>  <p style=\"margin-top: 20px;\">   <a href=\"{{ $('Loop Over Items').item.json['Certificate Link'] }}\"       style=\"background:#1a73e8; color:white; padding:12px 20px; text-decoration:none; border-radius:5px; display:inline-block;\">      View Certificate   </a> </p>  <p>We congratulate you on your successful completion and wish you continued success in your future endeavors.</p>  <p> Regards,<br> <strong>Training Team</strong> </p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2016,
+        160
+      ],
+      "id": "91619ae6-090c-4471-aa99-accd9b9bbf49",
+      "name": "Send a message",
+      "webhookId": "8f57edd4-ef74-4f5c-bca5-a65d7d683a56",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zSsVwVZiAzpF61qb",
+          "name": "Gmail account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Copy file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy file": {
+      "main": [
+        [
+          {
+            "node": "Update a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a document": {
+      "main": [
+        [
+          {
+            "node": "Share file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share file": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d159de1a-deb9-4aa8-9be1-022cb69e2e31",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "Nv22kpytl9R4Uhdg",
+  "tags": []
+}
