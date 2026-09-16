@@ -1,0 +1,194 @@
+{
+  "name": "AI Astrology Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -496,
+        0
+      ],
+      "id": "b730ce5b-951a-4716-8676-aa3a95896074",
+      "name": "Telegram Trigger",
+      "webhookId": "cbb6a677-591e-4e46-8012-1cb3d211a3e5",
+      "credentials": {
+        "telegramApi": {
+          "id": "8BwBL6RmeHaz1a0b",
+          "name": "aiastroagent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1cbb0c3d-54d5-4379-ba3c-a3facd92d9ac",
+              "name": "user_details",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -272,
+        0
+      ],
+      "id": "f9905a84-dd14-4499-89dd-5d1480873479",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=User Details:\n\n{{ $json.user_details }}\n",
+        "options": {
+          "systemMessage": "You are Astro, an AI astrology assistant.\n\nUse the user's details to understand their astrology-related question and provide a clear, friendly, and simple response.\n\nCollect and use:\n\n* Name\n* Date of Birth\n* Time of Birth\n* Place of Birth\n* Question\n\nIf any required birth detail is missing, ask the user for it before giving a detailed reading.\n\nBase interpretations on traditional astrology and do not present predictions as guaranteed facts.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -48,
+        0
+      ],
+      "id": "230a315e-dd9d-4079-b2a0-94369f32b395",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -192,
+        208
+      ],
+      "id": "7d06ffc8-3390-4f94-9bc6-ed4410e57a71",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $json.output || \"\";\n\nconst name =\n  output.match(/Hello,\\s*([^!]+)!/i)?.[1]?.trim() || \"\";\n\nconst date_of_birth =\n  output.match(/birth information\\s*\\(([^,]+),/i)?.[1]?.trim() || \"\";\n\nconst time_of_birth =\n  output.match(/at\\s+([^,]+)\\s+in\\s+/i)?.[1]?.trim() || \"\";\n\nconst place_of_birth =\n  output.match(/in\\s+([A-Za-z\\s]+)\\)/i)?.[1]?.trim() || \"\";\n\nreturn [\n  {\n    json: {\n      name,\n      date_of_birth,\n      time_of_birth,\n      place_of_birth,\n      output\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        0
+      ],
+      "id": "b761ea1d-a19f-4d57-9c37-892b529e2832",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "=here is your details::     {{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        544,
+        0
+      ],
+      "id": "5fdcd96e-9754-40c5-9d19-ce65f4cdaa1a",
+      "name": "Send a text message",
+      "webhookId": "00401c6d-1c7e-46bb-a8c0-0f8d034f9ad8",
+      "credentials": {
+        "telegramApi": {
+          "id": "8BwBL6RmeHaz1a0b",
+          "name": "aiastroagent"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8b1759fa-6670-400e-b0ae-bf3681aede3d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "lQJ0OiB4siV69brD",
+  "tags": []
+}
