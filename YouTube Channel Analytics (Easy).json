@@ -1,0 +1,248 @@
+{
+  "name": "YouTube Channel Analytics (Easy)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## YouTube Channel Analytics (Easy)\n\n1. Get a free API key: console.cloud.google.com > enable **YouTube Data API v3** > Credentials > Create API key.\n2. Open the **Config** node and paste your key and the channel handle (e.g. `@MrBeast`).\n3. Click **Execute workflow**. Open the last node and read the `report` field.\n\nNo other credentials needed. Remove your API key before sharing this workflow.",
+        "height": 260,
+        "width": 420,
+        "color": 4
+      },
+      "id": "c5d6847f-65a2-4ba5-8458-9aa9b4535bac",
+      "name": "Read Me",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "09bf30a8-e07d-4990-8a61-985d2cfed9ba",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        112,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "apiKey",
+              "value": "PASTE_YOUR_YOUTUBE_API_KEY_HERE",
+              "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "channelHandle",
+              "value": "@MrBeast",
+              "type": "string"
+            },
+            {
+              "id": "c3",
+              "name": "videosToAnalyze",
+              "value": 50,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "241c9bf3-f177-4283-a81e-31835a77893d",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/channels",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "part",
+              "value": "snippet,statistics,contentDetails"
+            },
+            {
+              "name": "forHandle",
+              "value": "={{ $json.channelHandle }}"
+            },
+            {
+              "name": "key",
+              "value": "=AIzaSyBXZV5RWZ2kxjDG3m4WfXLNqJxVDmYyoFw"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8a8c3112-2119-46a4-b292-01c7c36d5cca",
+      "name": "Get Channel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        544,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/playlistItems",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "part",
+              "value": "contentDetails"
+            },
+            {
+              "name": "playlistId",
+              "value": "={{ $json.items[0].contentDetails.relatedPlaylists.uploads }}"
+            },
+            {
+              "name": "maxResults",
+              "value": "={{ Math.min($('Config').first().json.videosToAnalyze, 50) }}"
+            },
+            {
+              "name": "key",
+              "value": "=AIzaSyBXZV5RWZ2kxjDG3m4WfXLNqJxVDmYyoFw"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c778b9c1-14ae-4cf5-a0d4-04f9e7aada9b",
+      "name": "Get Uploads",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        768,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/videos",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "part",
+              "value": "snippet,statistics,contentDetails"
+            },
+            {
+              "name": "id",
+              "value": "={{ $json.items.map(i => i.contentDetails.videoId).join(',') }}"
+            },
+            {
+              "name": "key",
+              "value": "=AIzaSyBXZV5RWZ2kxjDG3m4WfXLNqJxVDmYyoFw"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c2908bdc-f945-41fb-a43c-1f0a0154da29",
+      "name": "Get Video Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        992,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const channel = $('Get Channel').first().json.items[0];\nconst raw = $input.first().json.items || [];\nif (!raw.length) throw new Error('No video data returned.');\n\nconst avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;\nconst median = a => {\n  const s = [...a].sort((x, y) => x - y);\n  const m = Math.floor(s.length / 2);\n  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;\n};\nconst round = (n, d = 2) => Math.round(n * Math.pow(10, d)) / Math.pow(10, d);\nconst fmt = n => Number(n || 0).toLocaleString('en-US');\nconst dur = iso => {\n  const m = /PT(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+)S)?/.exec(iso || '');\n  return m ? (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0) : 0;\n};\n\nconst videos = raw.map(v => {\n  const s = v.statistics || {};\n  const views = +s.viewCount || 0, likes = +s.likeCount || 0, comments = +s.commentCount || 0;\n  const d = new Date(v.snippet.publishedAt);\n  return {\n    title: v.snippet.title,\n    url: 'https://www.youtube.com/watch?v=' + v.id,\n    date: v.snippet.publishedAt.slice(0, 10),\n    weekday: d.getUTCDay(),\n    views, likes, comments,\n    minutes: round(dur(v.contentDetails.duration) / 60, 1),\n    engagement: views ? round((likes + comments) / views * 100) : 0\n  };\n}).sort((a, b) => b.date.localeCompare(a.date));\n\nconst byViews = [...videos].sort((a, b) => b.views - a.views);\nconst byEng = [...videos].filter(v => v.views >= 100).sort((a, b) => b.engagement - a.engagement);\n\nconst times = videos.map(v => new Date(v.date).getTime());\nconst gaps = [];\nfor (let i = 0; i < times.length - 1; i++) gaps.push((times[i] - times[i + 1]) / 86400000);\n\nconst days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];\nconst dayStats = days.map((name, i) => {\n  const g = videos.filter(v => v.weekday === i);\n  return { day: name, uploads: g.length, avgViews: Math.round(avg(g.map(v => v.views))) };\n}).filter(x => x.uploads > 0).sort((a, b) => b.avgViews - a.avgViews);\n\nconst st = channel.statistics || {};\nconst L = [];\nL.push('CHANNEL: ' + channel.snippet.title + ' (' + (channel.snippet.customUrl || '') + ')');\nL.push('Subscribers: ' + (st.hiddenSubscriberCount ? 'hidden' : fmt(st.subscriberCount)) + ' | Total views: ' + fmt(st.viewCount) + ' | Videos: ' + fmt(st.videoCount));\nL.push('');\nL.push('LAST ' + videos.length + ' UPLOADS (' + videos[videos.length - 1].date + ' to ' + videos[0].date + ')');\nL.push('Median views: ' + fmt(Math.round(median(videos.map(v => v.views)))));\nL.push('Average views: ' + fmt(Math.round(avg(videos.map(v => v.views)))));\nL.push('Average engagement: ' + round(avg(videos.map(v => v.engagement))) + '% (likes + comments / views)');\nL.push('Average length: ' + round(avg(videos.map(v => v.minutes)), 1) + ' min');\nL.push('Upload frequency: one every ' + round(avg(gaps), 1) + ' days');\nL.push('');\nL.push('TOP 5 BY VIEWS');\nbyViews.slice(0, 5).forEach((v, i) => L.push((i + 1) + '. ' + v.title + ' - ' + fmt(v.views) + ' views, ' + v.engagement + '% eng.'));\nL.push('');\nL.push('TOP 5 BY ENGAGEMENT');\nbyEng.slice(0, 5).forEach((v, i) => L.push((i + 1) + '. ' + v.title + ' - ' + v.engagement + '% (' + fmt(v.views) + ' views)'));\nL.push('');\nL.push('BEST UPLOAD DAYS (by avg views, UTC)');\ndayStats.slice(0, 3).forEach(d => L.push('- ' + d.day + ': ' + fmt(d.avgViews) + ' avg views (' + d.uploads + ' uploads)'));\n\nreturn [{\n  json: {\n    report: L.join('\\n'),\n    topByViews: byViews.slice(0, 5),\n    topByEngagement: byEng.slice(0, 5),\n    weekdayStats: dayStats,\n    allVideos: videos\n  }\n}];"
+      },
+      "id": "288316a8-371a-4dae-a1e2-86dafbc064d7",
+      "name": "Analytics Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        320
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Get Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Channel": {
+      "main": [
+        [
+          {
+            "node": "Get Uploads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Uploads": {
+      "main": [
+        [
+          {
+            "node": "Get Video Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Video Stats": {
+      "main": [
+        [
+          {
+            "node": "Analytics Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b00c031a-8ddf-467d-a27a-4c37b1cc4890",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "l4YQBtr6CAyHlXDD",
+  "tags": []
+}

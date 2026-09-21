@@ -1,0 +1,113 @@
+{
+  "name": "AI Backups",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        -112
+      ],
+      "id": "ab505bc9-02e7-4800-83ec-7f150d3e96de",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1ZPQeae2wyWCJ9jUunUYqw5k-xHdQFHCQ",
+          "mode": "list",
+          "cachedResultName": "file.txt",
+          "cachedResultUrl": "https://drive.google.com/file/d/1ZPQeae2wyWCJ9jUunUYqw5k-xHdQFHCQ/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -352,
+        -112
+      ],
+      "id": "d83feb76-fcf8-431c-acaa-7499f272d85c",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3MPy9hFCjEhOCi5m",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $binary.data.fileName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1ZQ_C2u5EZgBtLolio6Oo6oEVqfnR_UhA",
+          "mode": "list",
+          "cachedResultName": "AI Backups",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1ZQ_C2u5EZgBtLolio6Oo6oEVqfnR_UhA"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -128,
+        -112
+      ],
+      "id": "8fec2a04-7491-4823-9c29-ad864b4abc78",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3MPy9hFCjEhOCi5m",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "53c4238d-6255-4fda-82a5-6a59b8942f37",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "WLIvztoVLwujUxJO",
+  "tags": []
+}

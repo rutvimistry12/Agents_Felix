@@ -1,0 +1,213 @@
+{
+  "name": "Automated Report Generator - n8n",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "689a89e6-5dc5-4891-9197-c0304dba394a",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "e063db88-1c61-46c1-9d2b-bd4c9a71b304",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -304,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { reportTitle: 'Weekly Business Performance Report', reportingPeriod: 'previous_week', generatedAt: new Date().toISOString(), metrics: ['revenue', 'completed_orders', 'conversion_rate', 'pipeline_value'], recipients: ['finance@example.com', 'leadership@example.com'] } }];"
+      },
+      "id": "ca364460-e488-4cbd-8789-bdb2d0db4a85",
+      "name": "Report Configuration",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\nconst end = new Date(now);\nconst start = new Date(now);\nstart.setDate(start.getDate() - 7);\nreturn [{ json: {\n  source: 'demo_data',\n  reportingPeriod: { start: start.toISOString().slice(0,10), end: end.toISOString().slice(0,10) },\n  revenue: 125000, previousRevenue: 110000,\n  completedOrders: 840, previousOrders: 790,\n  qualifiedSessions: 12000, previousQualifiedSessions: 10800,\n  pipelineValue: 480000, previousPipelineValue: 450000,\n  dataFreshness: now.toISOString()\n} }];"
+      },
+      "id": "df1acac5-f4fe-4ea8-9af5-1a32d3d5afaa",
+      "name": "Demo Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nconst pct = (a,b) => b === 0 ? null : Number(((a-b)/Math.abs(b)*100).toFixed(2));\nconst conversionRate = d.qualifiedSessions ? Number((d.completedOrders/d.qualifiedSessions*100).toFixed(2)) : null;\nconst previousConversionRate = d.previousQualifiedSessions ? Number((d.previousOrders/d.previousQualifiedSessions*100).toFixed(2)) : null;\nreturn [{ json: { ...d, conversionRate, previousConversionRate, changes: { revenue: pct(d.revenue,d.previousRevenue), completedOrders: pct(d.completedOrders,d.previousOrders), conversionRate: pct(conversionRate,previousConversionRate), pipelineValue: pct(d.pipelineValue,d.previousPipelineValue) } } }];"
+      },
+      "id": "3a073849-03e2-46fa-965a-a42e60db29f0",
+      "name": "Calculate Metrics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nconst required = ['revenue','previousRevenue','completedOrders','previousOrders','qualifiedSessions','previousQualifiedSessions','pipelineValue','previousPipelineValue'];\nconst errors = required.filter(k => d[k] === undefined || d[k] === null);\nconst warnings = Object.entries(d.changes || {}).filter(([,v]) => v !== null && Math.abs(v) > 30).map(([k,v]) => `${k} changed by ${v}%`);\nreturn [{ json: { ...d, validation: { passed: errors.length === 0, errors, warnings } } }];"
+      },
+      "id": "5cccb540-4fb9-49ab-94ed-ba2b1572a3f8",
+      "name": "Validate Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nconst f = (v) => v === null || v === undefined ? 'N/A' : `${v}%`;\nconst row = (label,current,previous,change) => `| ${label} | ${current} | ${previous} | ${f(change)} |`;\nconst report = `# Weekly Business Performance Report\n\n**Period:** ${d.reportingPeriod.start} to ${d.reportingPeriod.end}\n**Generated:** ${new Date().toISOString()}\n**Validation:** ${d.validation.passed ? 'PASSED' : 'FAILED'}\n\n## Executive summary\nRevenue was ${d.revenue} compared with ${d.previousRevenue} in the previous period, a change of ${f(d.changes.revenue)}. Completed orders changed by ${f(d.changes.completedOrders)}.\n\n## KPI performance\n| Metric | Current | Previous | Change |\n|---|---:|---:|---:|\n${row('Revenue',d.revenue,d.previousRevenue,d.changes.revenue)}\n${row('Completed orders',d.completedOrders,d.previousOrders,d.changes.completedOrders)}\n${row('Conversion rate',d.conversionRate+'%',d.previousConversionRate+'%',d.changes.conversionRate)}\n${row('Pipeline value',d.pipelineValue,d.previousPipelineValue,d.changes.pipelineValue)}\n\n## Anomalies and warnings\n${d.validation.warnings.length ? d.validation.warnings.map(x => '- '+x).join('\\n') : '- No threshold anomalies detected.'}\n\n## Methodology\nMetrics were calculated from the workflow input. Replace the Demo Data node with a database, API, spreadsheet, or other approved source before production use.\n\n## Sources\n- [demo_data] Demo Data node in this workflow.\n`;\nreturn [{ json: { ...d, reportMarkdown: report, reportStatus: d.validation.passed ? 'ready' : 'blocked' } }];"
+      },
+      "id": "ba258a96-c77c-4952-86cb-476c62293ebe",
+      "name": "Generate Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "reportMarkdown",
+        "options": {
+          "fileName": "weekly-business-performance.md"
+        }
+      },
+      "id": "a2c2f0ad-5680-4246-bc44-7377be76f5b4",
+      "name": "Save Markdown Report",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1264,
+        656
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Report Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Report Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report Configuration": {
+      "main": [
+        [
+          {
+            "node": "Demo Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Demo Data": {
+      "main": [
+        [
+          {
+            "node": "Calculate Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Metrics": {
+      "main": [
+        [
+          {
+            "node": "Validate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Data": {
+      "main": [
+        [
+          {
+            "node": "Generate Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Report": {
+      "main": [
+        [
+          {
+            "node": "Save Markdown Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "036f3571-3f04-4f5f-a88b-dbd148dd4462",
+  "meta": {
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "kU3vlnrIZglpQHRH",
+  "tags": []
+}

@@ -1,0 +1,181 @@
+{
+  "name": "AI Resume–Job Matcher Agent - Complete",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { candidateName: 'Alex Johnson', jobTitle: 'Data Analyst', resumeText: 'Python SQL Excel data analysis dashboards reporting stakeholder communication', jobDescription: 'We need a data analyst with Python SQL Excel dashboard experience and stakeholder communication skills.' } }];"
+      },
+      "id": "30e2d5f0-d9de-48f4-8259-9c52f8f4a7e6",
+      "name": "Manual Test Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-resume-job-matcher",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "e6f0c989-b400-4d9e-a524-310f9fda6d3e",
+      "name": "Resume Matcher Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        480
+      ],
+      "webhookId": "1c021781-9646-4d04-9833-e54fb6b85c9a"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json.body || $json;\nconst resumeText = String(input.resumeText || input.resume || '').trim();\nconst jobText = String(input.jobDescription || input.job || '').trim();\nif (!resumeText || !jobText) throw new Error('Both resumeText and jobDescription are required.');\nreturn [{ json: { candidateName: input.candidateName || 'Candidate', jobTitle: input.jobTitle || 'Target role', resumeText, jobText, receivedAt: new Date().toISOString() } }];"
+      },
+      "id": "ab299a14-89f9-4fdd-8dc1-70470fc4314b",
+      "name": "Prepare Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nconst stop = new Set(['the','and','for','with','that','this','from','are','you','your','will','our','have','has','job','role','work','years','using','into','about','they','their','who','what','can']);\nconst tokenize = s => [...new Set(String(s).toLowerCase().replace(/[^a-z0-9+#.\\-\\s]/g,' ').split(/\\s+/).filter(w => w.length > 2 && !stop.has(w)))];\nconst resumeWords = new Set(tokenize(d.resumeText));\nconst jobWords = tokenize(d.jobText);\nconst matched = jobWords.filter(w => resumeWords.has(w));\nconst missing = jobWords.filter(w => !resumeWords.has(w));\nconst score = Math.min(100, Math.round(matched.length / Math.max(jobWords.length, 1) * 100));\nconst level = score >= 75 ? 'Strong match' : score >= 50 ? 'Moderate match' : 'Weak match';\nreturn [{ json: { ...d, match: { score, level, matchedKeywords: matched.slice(0, 50), missingKeywords: missing.slice(0, 50), keywordCoveragePercent: score }, disclaimer: 'This automated score is a screening aid and must not be the sole basis for an employment decision.' } }];"
+      },
+      "id": "cb3c4f2d-c218-49a0-a931-c1321faf9128",
+      "name": "Analyze Resume and Job",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nconst m = d.match;\nconst bullets = a => a.length ? a.map(x => '- ' + x).join('\\n') : '- None detected.';\nconst reportMarkdown = `# AI Resume–Job Match Report\\n\\n**Candidate:** ${d.candidateName}  \\n**Target role:** ${d.jobTitle}  \\n**Generated:** ${new Date().toISOString()}\\n\\n## Match result\\n**${m.score}/100 — ${m.level}**\\n\\n## Matched keywords\\n${bullets(m.matchedKeywords)}\\n\\n## Potentially missing keywords\\n${bullets(m.missingKeywords)}\\n\\n## Recommendations\\n- Tailor the professional summary to the target role.\\n- Add measurable achievements related to the job requirements.\\n- Add missing skills only when they accurately represent the candidate’s experience.\\n- Review the original documents before making a hiring decision.\\n\\n## Notice\\n${d.disclaimer}`;\nreturn [{ json: { ...d, reportMarkdown, reportStatus: 'ready' } }];"
+      },
+      "id": "6ea7b5e4-d2e3-430e-b0fd-6ea29e6c0ec9",
+      "name": "Build Match Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { candidate: $json.candidateName, jobTitle: $json.jobTitle, matchScore: $json.match.score, matchLevel: $json.match.level, matchedKeywords: $json.match.matchedKeywords, missingKeywords: $json.match.missingKeywords, reportMarkdown: $json.reportMarkdown, disclaimer: $json.disclaimer } }}",
+        "options": {}
+      },
+      "id": "c16f7558-7b06-4867-8a99-9801cab95772",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1168,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "reportMarkdown",
+        "options": {
+          "fileName": "resume-job-match-report.md"
+        }
+      },
+      "id": "0209bbb5-3a3f-4681-95f1-5329226553a4",
+      "name": "Create Markdown File",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1168,
+        480
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Test Input": {
+      "main": [
+        [
+          {
+            "node": "Prepare Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resume Matcher Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Input": {
+      "main": [
+        [
+          {
+            "node": "Analyze Resume and Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Resume and Job": {
+      "main": [
+        [
+          {
+            "node": "Build Match Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Match Report": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Markdown File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "894114dc-dae2-47dd-a0ab-fdacba7a441b",
+  "meta": {
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "Bpq205P6jPoIQPkw",
+  "tags": []
+}

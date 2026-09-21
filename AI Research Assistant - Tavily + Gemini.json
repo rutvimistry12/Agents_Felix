@@ -1,0 +1,239 @@
+{
+  "name": "AI Research Assistant - Tavily + Gemini",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "d9978ee2-53a0-4713-a3bd-4715fd1548b4",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "topic",
+              "name": "researchTopic",
+              "value": "Artificial Intelligence automation trends in 2026",
+              "type": "string"
+            },
+            {
+              "id": "max",
+              "name": "maxResults",
+              "value": 5,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "431fb79a-4934-4e22-aec3-841d968716e4",
+      "name": "Research Topic",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1712,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\"query\": \"{{$json.researchTopic}}\", \"search_depth\": \"basic\", \"topic\": \"general\", \"max_results\": {{$json.maxResults}}, \"include_answer\": true}",
+        "options": {}
+      },
+      "id": "387dffe1-c186-4b1c-a8bb-80ef3ed882d9",
+      "name": "Tavily Web Research",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1952,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const topic = $('Research Topic').first().json.researchTopic;\nconst data = $input.first().json;\nconst results = Array.isArray(data.results) ? data.results : [];\nconst sources = results.map((r, i) => `${i + 1}. ${r.title || 'Untitled'}\\nURL: ${r.url || ''}\\nSummary: ${r.content || ''}`).join('\\n\\n');\nreturn [{ json: { researchTopic: topic, tavilyAnswer: data.answer || '', sources, researchData: `Tavily answer:\\n${data.answer || ''}\\n\\nSources:\\n${sources}` } }];"
+      },
+      "id": "ec457e12-7c2e-43d9-b294-3850a330fc39",
+      "name": "Prepare Research",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2192,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-goog-api-key",
+              "value": "AQ.Ab8RN6LRDe9iUebHGeFVtDsvhuVrgQnL-a-GFuXc0tXhBzTVww"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({contents:[{parts:[{text:`You are a research assistant. Write a clear, factual research report from the supplied web research. Do not invent facts.\\n\\nTopic: ${$json.researchTopic}\\n\\nWeb research:\\n${$json.researchData}\\n\\nUse exactly these Markdown sections:\\n# Research Report\\n## Executive Summary\\n## Key Findings\\n## Detailed Analysis\\n## Important Facts and Data\\n## Limitations\\n## Conclusion\\n## Sources\\nFor Sources, preserve the URLs supplied by Tavily.`}]}]}) }}",
+        "options": {}
+      },
+      "id": "c50f9e95-2656-4838-9c1b-248372e07386",
+      "name": "Generate Research Report - Gemini",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2448,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nconst text = r?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';\nif (!text) throw new Error('Gemini returned no text. Check your Gemini API key and API access.');\nreturn [{json:{success:true, researchTopic:$('Prepare Research').first().json.researchTopic, report:text}}];"
+      },
+      "id": "57fb8878-4b4a-4ee6-bbb3-568bdab41631",
+      "name": "Final Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2704,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=Succsfully generated reseach papers for {{ $json.researchTopic }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2928,
+        112
+      ],
+      "id": "8c0684c9-2fd5-4ce8-a311-82a80d0e2d0a",
+      "name": "Send a text message",
+      "webhookId": "a15fdf80-bd48-42c4-8674-05b09c8aeba7",
+      "credentials": {
+        "telegramApi": {
+          "id": "oINRcjwOW9CNuu8T",
+          "name": "researchagent"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Research Topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Topic": {
+      "main": [
+        [
+          {
+            "node": "Tavily Web Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily Web Research": {
+      "main": [
+        [
+          {
+            "node": "Prepare Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Research": {
+      "main": [
+        [
+          {
+            "node": "Generate Research Report - Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Research Report - Gemini": {
+      "main": [
+        [
+          {
+            "node": "Final Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Report": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3ba51ba0-d435-47f1-bb3e-428c7c134787",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "ZHVtmqPPRvCDEoXf",
+  "tags": []
+}

@@ -1,0 +1,304 @@
+{
+  "name": "Automated Employee Performance Report Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "dcc661dc-0e93-477a-ab86-50b5ee2dfde9",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "100KVeH-MyPBB3acUPFI71rs9S_wSlUvnrKi4ptnugZo",
+          "mode": "list",
+          "cachedResultName": "Employee Performance Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/100KVeH-MyPBB3acUPFI71rs9S_wSlUvnrKi4ptnugZo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/100KVeH-MyPBB3acUPFI71rs9S_wSlUvnrKi4ptnugZo/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "9630ec29-dbb1-499b-aebe-6a8879f09d73",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this employee performance record.\n\nEmployee ID: {{ $json[\"Employee ID\"] }}\nEmployee Name: {{ $json[\"Employee Name\"] }}\nDepartment: {{ $json[\"Department\"] }}\nAttendance: {{ $json[\"Attendance %\"] }}\nTasks Assigned: {{ $json[\"Tasks Assigned\"] }}\nTasks Completed: {{ $json[\"Tasks Completed\"] }}\nTasks Pending: {{ $json[\"Tasks Pending\"] }}\nQuality Score: {{ $json[\"Quality Score\"] }}\nProductivity Score: {{ $json[\"Productivity Score\"] }}\nManager Feedback: {{ $json[\"Manager Feedback\"] }}\n\nUse the data above to generate the performance report.\n\nReturn ONLY valid JSON:\n\n{\n  \"employee_id\": \"\",\n  \"employee_name\": \"\",\n  \"department\": \"\",\n  \"performance_level\": \"\",\n  \"performance_score\": 0,\n  \"strengths\": [],\n  \"areas_for_improvement\": [],\n  \"summary\": \"\",\n  \"recommendations\": []\n}",
+        "options": {
+          "systemMessage": "You are an Employee Performance Analysis Assistant.\n\nAnalyze employee performance objectively using only the provided data.\n\nEvaluate:\n- Attendance\n- Task completion\n- Pending tasks\n- Quality\n- Productivity\n- Manager feedback\n\nReturn ONLY valid JSON.\n\nUse exactly this structure:\n\n{\n  \"employee_id\": \"\",\n  \"employee_name\": \"\",\n  \"department\": \"\",\n  \"performance_level\": \"\",\n  \"performance_score\": 0,\n  \"strengths\": [],\n  \"areas_for_improvement\": [],\n  \"summary\": \"\",\n  \"recommendations\": []\n}\n\nPerformance level should be one of:\nExcellent\nGood\nAverage\nNeeds Improvement\n\nPerformance score should be between 0 and 100.\n\nDo not include markdown.\nDo not include ```json.\nReturn complete and valid JSON."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "573c662e-879e-473e-8ca7-9758c60c2957",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        208
+      ],
+      "id": "6e376652-cfa7-417b-b3f5-092e024e83b9",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "x7ZKneu4wUTlMGtO",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $json.output;\n\nif (!output) {\n  throw new Error(\"AI Agent output is missing.\");\n}\n\nconst cleaned = output\n  .replace(/\\\\n/g, \"\\n\")\n  .replace(/\\\\\"/g, '\"')\n  .trim();\n\nlet result;\n\ntry {\n  result = JSON.parse(cleaned);\n} catch (error) {\n  throw new Error(\"Invalid AI JSON: \" + cleaned);\n}\n\nreturn [\n  {\n    json: {\n      employee_id: result.employee_id || \"\",\n      employee_name: result.employee_name || \"\",\n      department: result.department || \"\",\n      performance_level: result.performance_level || \"\",\n      performance_score: result.performance_score || 0,\n\n      strengths: Array.isArray(result.strengths)\n        ? result.strengths.join(\", \")\n        : result.strengths || \"\",\n\n      areas_for_improvement: Array.isArray(result.areas_for_improvement)\n        ? result.areas_for_improvement.join(\", \")\n        : result.areas_for_improvement || \"\",\n\n      summary: result.summary || \"\",\n\n      recommendations: Array.isArray(result.recommendations)\n        ? result.recommendations.join(\", \")\n        : result.recommendations || \"\"\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        0
+      ],
+      "id": "886dc5ea-ca25-4746-ae01-fd669a1bd1d7",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "100KVeH-MyPBB3acUPFI71rs9S_wSlUvnrKi4ptnugZo",
+          "mode": "list",
+          "cachedResultName": "Performance Reports",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/100KVeH-MyPBB3acUPFI71rs9S_wSlUvnrKi4ptnugZo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 353637659,
+          "mode": "list",
+          "cachedResultName": "Sheet2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/100KVeH-MyPBB3acUPFI71rs9S_wSlUvnrKi4ptnugZo/edit#gid=353637659"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Employee ID": "={{ $json.employee_id }}",
+            "Employee Name": "={{ $json.employee_name }}",
+            "Department": "={{ $json.department }}",
+            "Performance Level": "={{ $json.performance_level }}",
+            "Performance Score": "={{ $json.performance_score }}",
+            "Strengths": "={{ $json.strengths }}",
+            "Areas for Improvement": "={{ $json.areas_for_improvement }}",
+            "Summary": "={{ $json.summary }}",
+            "Recommendations": "={{ $json.recommendations }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Employee ID",
+              "displayName": "Employee ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Employee Name",
+              "displayName": "Employee Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Department",
+              "displayName": "Department",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Performance Level",
+              "displayName": "Performance Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Performance Score",
+              "displayName": "Performance Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Strengths",
+              "displayName": "Strengths",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Areas for Improvement",
+              "displayName": "Areas for Improvement",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Recommendations",
+              "displayName": "Recommendations",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "e3b289d0-9a35-478f-a108-e8ec870e67e8",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5f97d89d-658e-45c6-a731-ed98aa94a288",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "PDxPBbigSE76pGPU",
+  "tags": []
+}

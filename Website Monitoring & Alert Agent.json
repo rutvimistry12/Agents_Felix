@@ -1,0 +1,380 @@
+{
+  "name": "Website Monitoring & Alert Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "dc77abc8-63cd-453e-99b5-3a63afddf9b7",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -224,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "url",
+              "value": "https://www.squarespace.com/",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "name",
+              "value": "squarespace",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "expectedStatus",
+              "value": 200,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "806318d5-e2f4-4c57-877a-80523dbf3a9d",
+      "name": "Website 1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "url",
+              "value": "https://en.wikipedia.org/",
+              "type": "string"
+            },
+            {
+              "id": "b2",
+              "name": "name",
+              "value": "wikipedia",
+              "type": "string"
+            },
+            {
+              "id": "b3",
+              "name": "expectedStatus",
+              "value": 200,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "810aadf3-ef6d-43f1-b4a4-87e3a746715c",
+      "name": "Website 2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "url",
+              "value": "https://www.github.com",
+              "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "name",
+              "value": "GitHub",
+              "type": "string"
+            },
+            {
+              "id": "c3",
+              "name": "expectedStatus",
+              "value": 200,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6ff15fba-232a-41e7-b7d4-42e94f1523ee",
+      "name": "Website 3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        288
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "8cecf2e2-fd23-4d2b-b0dc-602843c1a3a1",
+      "name": "Merge Websites",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        256,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "n8n-Website-Monitor/1.0"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "d4b638c6-ef41-4fae-be15-720252d81267",
+      "name": "Check Website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        512,
+        160
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\nreturn input.map(item => {\n  const d = item.json;\n  const website = d.name || d.url || 'Unknown Website';\n  const url = d.url || '';\n  const expected = Number(d.expectedStatus || 200);\n  const statusCode = Number(d.statusCode ?? d.status ?? d.httpCode ?? d.response?.statusCode ?? 0);\n  const responseTime = Number(d.responseTime ?? d.elapsedTime ?? d.duration ?? 0);\n  const errorText = d.error?.message || d.message || '';\n  const isUp = statusCode >= 200 && statusCode < 400;\n  const statusMatches = statusCode === expected;\n  let alertType = 'UP';\n  let severity = 'INFO';\n  if (!statusCode) { alertType = 'DOWN'; severity = 'CRITICAL'; }\n  else if (!statusMatches || !isUp) { alertType = 'HTTP_ERROR'; severity = statusCode >= 500 ? 'CRITICAL' : 'WARNING'; }\n  return {json:{website,url,expectedStatus:expected,statusCode,responseTimeMs:responseTime,isUp,statusMatches,alertType,severity,error:errorText,checkedAt:new Date().toISOString()}};\n});"
+      },
+      "id": "7ad3f21c-2728-497c-8c52-5f763a7e5d45",
+      "name": "Analyze Website Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond1",
+              "leftValue": "={{ $json.isUp }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3dc09e8a-55e9-4659-83bb-7531cf75beb1",
+      "name": "Website Is Up?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        992,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const d = item.json;\n  return {json:{...d,message:`🟢 WEBSITE UP\n\nWebsite: ${d.website}\nURL: ${d.url}\nHTTP Status: ${d.statusCode}\nResponse Time: ${d.responseTimeMs ? d.responseTimeMs + ' ms' : 'N/A'}\nChecked: ${d.checkedAt}`}};\n});"
+      },
+      "id": "747bb8a7-9e3b-4055-bca1-d343b7e40729",
+      "name": "Create Healthy Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const d = item.json;\n  return {json:{...d,message:`🚨 WEBSITE ALERT\n\nWebsite: ${d.website}\nURL: ${d.url}\nStatus: ${d.statusCode || 'NO RESPONSE'}\nExpected: ${d.expectedStatus}\nAlert: ${d.alertType}\nSeverity: ${d.severity}\nResponse Time: ${d.responseTimeMs ? d.responseTimeMs + ' ms' : 'N/A'}\nError: ${d.error || 'Website did not return a valid response'}\nChecked: ${d.checkedAt}`}};\n});"
+      },
+      "id": "9216f354-034c-4936-abf4-7088a9966e86",
+      "name": "Create Alert Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "id": "7bc787a5-16c8-4f50-be70-05530260a105",
+      "name": "Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1472,
+        288
+      ],
+      "webhookId": "1bd735e1-3729-4d00-91c0-84f44054ebeb",
+      "credentials": {
+        "telegramApi": {
+          "id": "3HoOPwQpHlK2i1Fm",
+          "name": "attendmonitor"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Website 1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Website 2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Website 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Website 1": {
+      "main": [
+        [
+          {
+            "node": "Merge Websites",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Website 2": {
+      "main": [
+        [
+          {
+            "node": "Merge Websites",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Websites": {
+      "main": [
+        [
+          {
+            "node": "Check Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Website": {
+      "main": [
+        [
+          {
+            "node": "Analyze Website Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Website Status": {
+      "main": [
+        [
+          {
+            "node": "Website Is Up?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Website Is Up?": {
+      "main": [
+        [
+          {
+            "node": "Create Healthy Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Alert Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Alert Message": {
+      "main": [
+        [
+          {
+            "node": "Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9bdb030a-de17-4557-bf95-d6f4270b269f",
+  "meta": {
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "LD9r1VGDMwreikOx",
+  "tags": []
+}

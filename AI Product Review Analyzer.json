@@ -1,0 +1,310 @@
+{
+  "name": "AI Product Review Analyzer",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        -128
+      ],
+      "id": "6627d92b-f535-4b52-8931-a519b02deb58",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "baa1ffdb-a4ee-4264-8aad-be83d1329358",
+              "name": "productName",
+              "value": "Wireless Headphones",
+              "type": "string"
+            },
+            {
+              "id": "3017c5f6-718f-430c-a64e-481131b636a9",
+              "name": "review",
+              "value": "The sound quality is excellent, but the battery life is poor and delivery was late.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        112,
+        -128
+      ],
+      "id": "1680f35c-ecc2-46f3-ab71-e8f09a788744",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this product review.\n\nProduct:\n{{ $json.productName }}\n\nReview:\n{{ $json.review }}\n\nReturn the result in JSON with exactly these fields:\n\n{\n  \"sentiment\": \"Positive/Neutral/Negative\",\n  \"rating\": 1,\n  \"summary\": \"\",\n  \"strengths\": [],\n  \"issues\": [],\n  \"product_quality\": \"\",\n  \"delivery_experience\": \"\",\n  \"recommendation\": \"Yes/No\"\n}",
+        "options": {
+          "systemMessage": "You are an AI Product Review Analyzer.\n\nAnalyze customer product reviews objectively.\n\nIdentify:\n- overall sentiment\n- estimated rating from 1 to 5\n- summary\n- product strengths\n- problems/issues\n- product quality\n- delivery experience\n- whether the customer appears likely to recommend the product\n\nReturn only valid JSON.\nDo not add markdown or explanations outside the JSON."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        336,
+        -128
+      ],
+      "id": "fa8dc96a-3d76-4f19-8a6f-5c35b8e30b37",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        80
+      ],
+      "id": "8995566a-6e6f-4516-aada-baafc164be88",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "x7ZKneu4wUTlMGtO",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $json.output;\n\nif (!output) {\n  throw new Error(\"AI Agent output is missing.\");\n}\n\n// Convert escaped/newline JSON into normal JSON\nconst cleaned = output\n  .replace(/\\\\n/g, \"\\n\")\n  .replace(/\\\\\"/g, '\"')\n  .trim();\n\nlet result;\n\ntry {\n  result = JSON.parse(cleaned);\n} catch (error) {\n  throw new Error(\"Could not parse AI Agent JSON: \" + cleaned);\n}\n\nreturn [\n  {\n    json: {\n      sentiment: result.sentiment || \"\",\n      rating: result.rating || \"\",\n      summary: result.summary || \"\",\n      strengths: Array.isArray(result.strengths)\n        ? result.strengths.join(\", \")\n        : result.strengths || \"\",\n      issues: Array.isArray(result.issues)\n        ? result.issues.join(\", \")\n        : result.issues || \"\",\n      product_quality: result.product_quality || \"\",\n      delivery_experience: result.delivery_experience || \"\",\n      recommendation: result.recommendation || \"\"\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -112
+      ],
+      "id": "40c9928c-4a99-446d-aa21-7e94e7310e4e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1n4csn35FFsfhb60hERDxxPkgnSzOrb2dYsYAt2S-j2Y",
+          "mode": "list",
+          "cachedResultName": "AI Product Review Analysis",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1n4csn35FFsfhb60hERDxxPkgnSzOrb2dYsYAt2S-j2Y/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1n4csn35FFsfhb60hERDxxPkgnSzOrb2dYsYAt2S-j2Y/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Product Name": "={{ $('Edit Fields').item.json.productName }}",
+            "Review": "={{ $('Edit Fields').item.json.review }}",
+            "Sentiment": "={{ $json.sentiment }}",
+            "Rating": "={{ $json.rating }}",
+            "Summary": "={{ $json.summary }}",
+            "Strengths": "={{ $json.strengths }}",
+            "Issues": "={{ $json.issues }}",
+            "Product Quality": "={{ $json.product_quality }}",
+            "Delivery Experience": "={{ $json.delivery_experience }}",
+            "Recommendation": "={{ $json.recommendation }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Product Name",
+              "displayName": "Product Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Review",
+              "displayName": "Review",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sentiment",
+              "displayName": "Sentiment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Rating",
+              "displayName": "Rating",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Strengths",
+              "displayName": "Strengths",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Issues",
+              "displayName": "Issues",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product Quality",
+              "displayName": "Product Quality",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Delivery Experience",
+              "displayName": "Delivery Experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Recommendation",
+              "displayName": "Recommendation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        -112
+      ],
+      "id": "a5fdb124-53eb-409d-8693-ecfdcba01a6b",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ee91cda7-1fb3-4d26-8b6c-d15efbbbbb14",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "JzIgxJPebTe4HpRg",
+  "tags": []
+}

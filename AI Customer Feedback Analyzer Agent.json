@@ -1,0 +1,158 @@
+{
+  "name": "AI Customer Feedback Analyzer Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "f154b8fa-c312-44e9-99f7-08a4f45127d9",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "feedback",
+              "name": "feedback",
+              "value": "The product is useful and easy to use, but the mobile app is slow and customer support took too long to respond.",
+              "type": "string"
+            },
+            {
+              "id": "customer",
+              "name": "customer",
+              "value": "Demo Customer",
+              "type": "string"
+            },
+            {
+              "id": "source",
+              "name": "source",
+              "value": "Manual Test",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8a4a87dc-90c7-43e6-bfd8-7c5f46e2727f",
+      "name": "Feedback Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this customer feedback:\n\nCustomer: {{ $json.customer }}\nSource: {{ $json.source }}\nFeedback: {{ $json.feedback }}\n\nReturn ONLY valid JSON with exactly these keys:\n{\n  \"sentiment\": \"Positive|Neutral|Negative|Mixed\",\n  \"sentimentScore\": 0,\n  \"category\": \"Product|Service|Support|Pricing|Delivery|UX|Other\",\n  \"urgency\": \"Low|Medium|High|Critical\",\n  \"summary\": \"short summary\",\n  \"positivePoints\": [\"...\"],\n  \"negativePoints\": [\"...\"],\n  \"customerIntent\": \"short description\",\n  \"actionRequired\": true,\n  \"recommendedAction\": \"short recommended action\",\n  \"priority\": \"Low|Medium|High|Critical\"\n}\n\nRules:\n- sentimentScore must be an integer from 0 to 100.\n- Do not use markdown or code fences.\n- Keep the output valid JSON.",
+        "batching": {}
+      },
+      "id": "7278e41d-4cf5-434e-a1cb-022bd3a02c31",
+      "name": "AI Analyze Feedback",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        32,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.text ?? $json.output ?? $json.response ?? '';\n\nlet data;\ntry {\n  const cleaned = String(raw)\n    .replace(/^```json\\s*/i, '')\n    .replace(/^```\\s*/i, '')\n    .replace(/```$/i, '')\n    .trim();\n\n  data = JSON.parse(cleaned);\n} catch (error) {\n  data = {\n    sentiment: 'Unknown',\n    sentimentScore: 0,\n    category: 'Other',\n    urgency: 'Low',\n    summary: 'AI returned a response that could not be parsed as JSON.',\n    positivePoints: [],\n    negativePoints: [],\n    customerIntent: '',\n    actionRequired: false,\n    recommendedAction: 'Review the AI response manually.',\n    priority: 'Low',\n    parseError: error.message,\n    rawOutput: raw\n  };\n}\n\nreturn [{\n  json: {\n    customer: $('Feedback Input').first().json.customer,\n    source: $('Feedback Input').first().json.source,\n    feedback: $('Feedback Input').first().json.feedback,\n    ...data,\n    analyzedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "907ccd48-4f04-409e-967a-619964558455",
+      "name": "Parse & Format Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -48,
+        -48
+      ],
+      "id": "533de414-c5a9-4d01-8974-d059afeac8a6",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "x7ZKneu4wUTlMGtO",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Feedback Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Feedback Input": {
+      "main": [
+        [
+          {
+            "node": "AI Analyze Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Analyze Feedback": {
+      "main": [
+        [
+          {
+            "node": "Parse & Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Analyze Feedback",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "264691d7-bf46-4bee-85f6-5a2c8e779eff",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "XaLI3RSq2ApyU4tZ",
+  "tags": []
+}
