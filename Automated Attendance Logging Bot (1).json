@@ -1,0 +1,839 @@
+{
+  "name": "Automated Attendance Logging Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\nconst user = $('Parse Command').first().json;\n\nconst todayRows = rows.filter(item => {\n  const row = item.json;\n\n  return String(row.telegramId) === String(user.telegramId)\n    && String(row.date) === String(user.date);\n});\n\nif (todayRows.length === 0) {\n  return [{\n    json: {\n      telegramId: user.telegramId,\n      message:\n        `📊 Today's Attendance\\n\\n` +\n        `👤 ${user.fullName}\\n` +\n        `📅 ${user.date}\\n\\n` +\n        `❌ No attendance marked today.`\n    }\n  }];\n}\n\nconst row = todayRows[0].json;\n\nreturn [{\n  json: {\n    telegramId: user.telegramId,\n    message:\n      `📊 Today's Attendance\\n\\n` +\n      `👤 ${row.fullName}\\n` +\n      `📅 ${row.date}\\n` +\n      `🕐 ${row.time}\\n` +\n      `📌 Status: ${row.status}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        -176
+      ],
+      "id": "d352fc06-788a-4cc2-b820-66a88fa1ff18",
+      "name": "0"
+    },
+    {
+      "parameters": {
+        "jsCode": "const msg = $json.message || {};\n\nconst text = String(msg.text || '').trim();\n\nconst command = text\n  .toLowerCase()\n  .replace(/^\\//, '')\n  .split(/\\s+/)[0];\n\nconst now = $now.setZone('Asia/Kolkata');\n\nconst commands = {\n  today: 'today',\n  present: 'today',\n  checkin: 'checkin',\n  status: 'status',\n  history: 'history',\n  report: 'report',\n  help: 'help'\n};\n\nconst telegramId = String(msg.from?.id || '');\nconst date = now.toFormat('yyyy-MM-dd');\nconst time = now.toFormat('HH:mm:ss');\n\nreturn [\n  {\n    json: {\n      telegramId: telegramId,\n\n      username: msg.from?.username || 'No Username',\n\n      fullName:\n        `${msg.from?.first_name || ''} ${msg.from?.last_name || ''}`.trim()\n        || 'Unknown User',\n\n      inputText: text,\n\n      command: commands[command] || 'unknown',\n\n      date: date,\n\n      time: time,\n\n      attendanceKey: `${telegramId}_${date}`,\n\n      status: 'Present'\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        0
+      ],
+      "id": "12118391-c142-48a0-92a6-123302bdea5f",
+      "name": "1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\nconst user = $('Parse Command').first().json;\n\nconst userRows = rows.filter(item =>\n  String(item.json.telegramId) === String(user.telegramId)\n);\n\nconst total = userRows.length;\n\nconst present = userRows.filter(item =>\n  String(item.json.status).toLowerCase() === 'present'\n).length;\n\nconst absent = userRows.filter(item =>\n  String(item.json.status).toLowerCase() === 'absent'\n).length;\n\nconst percentage = total > 0\n  ? ((present / total) * 100).toFixed(1)\n  : '0.0';\n\nreturn [{\n  json: {\n    telegramId: user.telegramId,\n    message:\n      `📊 Attendance Status\\n\\n` +\n      `👤 ${user.fullName}\\n\\n` +\n      `📅 Total Records: ${total}\\n` +\n      `✅ Present: ${present}\\n` +\n      `❌ Absent: ${absent}\\n` +\n      `📈 Attendance Rate: ${percentage}%`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        192
+      ],
+      "id": "a57d5403-a02b-4d81-a453-7a961de26c4e",
+      "name": "2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\nconst user = $('Parse Command').first().json;\n\nconst userRows = rows\n  .filter(item =>\n    String(item.json.telegramId) === String(user.telegramId)\n  )\n  .sort((a, b) =>\n    String(b.json.date).localeCompare(String(a.json.date))\n  );\n\nif (userRows.length === 0) {\n  return [{\n    json: {\n      telegramId: user.telegramId,\n      message: `📋 No attendance history found for ${user.fullName}.`\n    }\n  }];\n}\n\nconst history = userRows\n  .slice(0, 10)\n  .map(item => {\n    const r = item.json;\n\n    return `${r.date} — ${r.status}${r.time ? ` — ${r.time}` : ''}`;\n  })\n  .join('\\n');\n\nreturn [{\n  json: {\n    telegramId: user.telegramId,\n    message:\n      `📋 Attendance History\\n\\n` +\n      `👤 ${user.fullName}\\n\\n` +\n      history\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        416
+      ],
+      "id": "cc0565c8-496d-4de0-a17b-ef5b1fb4c595",
+      "name": "3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\nconst user = $('Parse Command').first().json;\n\nconst userRows = rows.filter(item =>\n  String(item.json.telegramId) === String(user.telegramId)\n);\n\nconst total = userRows.length;\n\nconst present = userRows.filter(item =>\n  String(item.json.status).toLowerCase() === 'present'\n).length;\n\nconst absent = userRows.filter(item =>\n  String(item.json.status).toLowerCase() === 'absent'\n).length;\n\nconst rate = total > 0\n  ? ((present / total) * 100).toFixed(1)\n  : '0.0';\n\nlet remark;\n\nif (total === 0) {\n  remark = 'No attendance data available.';\n} else if (Number(rate) >= 90) {\n  remark = 'Attendance is above 90%.';\n} else if (Number(rate) >= 75) {\n  remark = 'Attendance is between 75% and 90%.';\n} else {\n  remark = 'Attendance is below 75%.';\n}\n\nreturn [{\n  json: {\n    telegramId: user.telegramId,\n    message:\n      `📑 Attendance Report\\n\\n` +\n      `👤 ${user.fullName}\\n\\n` +\n      `📅 Total Records: ${total}\\n` +\n      `✅ Present: ${present}\\n` +\n      `❌ Absent: ${absent}\\n` +\n      `📈 Attendance Rate: ${rate}%\\n\\n` +\n      `💡 ${remark}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        768
+      ],
+      "id": "c761f65f-284a-4700-b129-af8eabfb4c3f",
+      "name": "4"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -448,
+        96
+      ],
+      "id": "45d234fa-e327-49c1-b5a4-cbc12b4ec98f",
+      "name": "Telegram Trigger",
+      "webhookId": "b627b79c-b4b9-4a63-a91b-e05dcb1e064a",
+      "credentials": {
+        "telegramApi": {
+          "id": "3HoOPwQpHlK2i1Fm",
+          "name": "attendmonitor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const msg = $json.message || {};\n\nconst text = String(msg.text || '').trim();\n\nconst command = text\n  .toLowerCase()\n  .replace(/^\\//, '')\n  .split(/\\s+/)[0];\n\nconst now = $now.setZone('Asia/Kolkata');\n\nconst commands = {\n  today: 'today',\n  present: 'today',\n  checkin: 'checkin',\n  status: 'status',\n  history: 'history',\n  report: 'report',\n  help: 'help'\n};\n\nconst telegramId = String(msg.from?.id || '');\nconst date = now.toFormat('yyyy-MM-dd');\nconst time = now.toFormat('HH:mm:ss');\n\nreturn [\n  {\n    json: {\n      telegramId: telegramId,\n\n      username: msg.from?.username || 'No Username',\n\n      fullName:\n        `${msg.from?.first_name || ''} ${msg.from?.last_name || ''}`.trim()\n        || 'Unknown User',\n\n      inputText: text,\n\n      command: commands[command] || 'unknown',\n\n      date: date,\n\n      time: time,\n\n      attendanceKey: `${telegramId}_${date}`,\n\n      status: 'Present'\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "680c5109-f93a-4c2b-8958-cd050b79b0a5",
+      "name": "Parse Command"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.command }}",
+                    "rightValue": "today",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "78662351-eecc-4562-bb53-5a663d9f5428"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "be9ea4c4-4752-4674-a094-1fa8c55699a5",
+                    "leftValue": "={{ $json.command }}",
+                    "rightValue": "=checkin",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "68bec802-7ab3-41b2-8f02-752ba3c1abd9",
+                    "leftValue": "={{ $json.command }}",
+                    "rightValue": "=status",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "361b947e-3b4b-4cba-bd97-0cdad1de1470",
+                    "leftValue": "={{ $json.command }}",
+                    "rightValue": "=history",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ca525cbc-bad0-460b-9cfe-5a328156f518",
+                    "leftValue": "={{ $json.command }}",
+                    "rightValue": "report",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "62a3db98-3247-426a-b5d5-83fbd1b2de7b",
+                    "leftValue": "={{ $json.command }}",
+                    "rightValue": "=help",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "6138ae56-bb90-45aa-9a49-e99958453919",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1ChdTew-k-wPbFqCzF2VMwZ8SIERgbYoRWUWOqxJkC3E",
+          "mode": "list",
+          "cachedResultName": "Attendance Intelligence",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ChdTew-k-wPbFqCzF2VMwZ8SIERgbYoRWUWOqxJkC3E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ChdTew-k-wPbFqCzF2VMwZ8SIERgbYoRWUWOqxJkC3E/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "telegramId": "={{ $('Parse Command').item.json.telegramId }}",
+            "username": "={{ $('Parse Command').item.json.username }}",
+            "fullName": "={{ $('Parse Command').item.json.fullName }}",
+            "date": "={{ $('Parse Command').item.json.date }}",
+            "time": "={{ $('Parse Command').item.json.time }}",
+            "status": "={{ $('Parse Command').item.json.status }}",
+            "attendanceKey": "={{ $('Parse Command').item.json.attendanceKey }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "telegramId",
+              "displayName": "telegramId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "username",
+              "displayName": "username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fullName",
+              "displayName": "fullName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "time",
+              "displayName": "time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "attendanceKey",
+              "displayName": "attendanceKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        704,
+        0
+      ],
+      "id": "0da23ed7-1609-45e0-b3b5-cc7e75e310f4",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=✅ Attendance marked successfully!  👤 {{ $('Parse Command').item.json.fullName }} 📅 {{ $('Parse Command').item.json.date }} 🕐 {{ $('Parse Command').item.json.time }} 📌 Status: Present",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1168,
+        0
+      ],
+      "id": "8b762f2d-9053-4b69-a3e1-755fea6fdb8b",
+      "name": "Send a text message",
+      "webhookId": "834a24a3-9896-46a7-b2cf-85bb3db86530",
+      "credentials": {
+        "telegramApi": {
+          "id": "3HoOPwQpHlK2i1Fm",
+          "name": "attendmonitor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ChdTew-k-wPbFqCzF2VMwZ8SIERgbYoRWUWOqxJkC3E",
+          "mode": "list",
+          "cachedResultName": "Attendance Intelligence",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ChdTew-k-wPbFqCzF2VMwZ8SIERgbYoRWUWOqxJkC3E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ChdTew-k-wPbFqCzF2VMwZ8SIERgbYoRWUWOqxJkC3E/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        832,
+        -176
+      ],
+      "id": "2b7de372-ddbc-4479-8f0e-d256a2487588",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1280,
+        -176
+      ],
+      "id": "23f56a2a-44bb-4128-bde2-fbfce81faeb2",
+      "name": "Send a text message1",
+      "webhookId": "622e62c8-c884-4872-b6df-b23c2caa01eb",
+      "credentials": {
+        "telegramApi": {
+          "id": "3HoOPwQpHlK2i1Fm",
+          "name": "attendmonitor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ChdTew-k-wPbFqCzF2VMwZ8SIERgbYoRWUWOqxJkC3E",
+          "mode": "list",
+          "cachedResultName": "Attendance Intelligence",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ChdTew-k-wPbFqCzF2VMwZ8SIERgbYoRWUWOqxJkC3E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ChdTew-k-wPbFqCzF2VMwZ8SIERgbYoRWUWOqxJkC3E/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        576,
+        192
+      ],
+      "id": "6a299256-90d0-4a5a-be53-aedae531130e",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1024,
+        192
+      ],
+      "id": "1ce3bd07-30c2-4a1a-a844-22faa3abfc7e",
+      "name": "Send a text message2",
+      "webhookId": "40dcaada-3b04-401a-8609-ab0c84bfd19e",
+      "credentials": {
+        "telegramApi": {
+          "id": "3HoOPwQpHlK2i1Fm",
+          "name": "attendmonitor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ChdTew-k-wPbFqCzF2VMwZ8SIERgbYoRWUWOqxJkC3E",
+          "mode": "list",
+          "cachedResultName": "Attendance Intelligence",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ChdTew-k-wPbFqCzF2VMwZ8SIERgbYoRWUWOqxJkC3E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ChdTew-k-wPbFqCzF2VMwZ8SIERgbYoRWUWOqxJkC3E/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        496,
+        416
+      ],
+      "id": "ae258cd9-dfc7-4201-b781-cd1e876748f2",
+      "name": "Get row(s) in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        944,
+        416
+      ],
+      "id": "a41d2239-e4d3-40b8-acf6-68cd2cd90127",
+      "name": "Send a text message3",
+      "webhookId": "414e7155-40f4-46fd-83fb-ed2082825975",
+      "credentials": {
+        "telegramApi": {
+          "id": "3HoOPwQpHlK2i1Fm",
+          "name": "attendmonitor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ChdTew-k-wPbFqCzF2VMwZ8SIERgbYoRWUWOqxJkC3E",
+          "mode": "list",
+          "cachedResultName": "Attendance Intelligence",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ChdTew-k-wPbFqCzF2VMwZ8SIERgbYoRWUWOqxJkC3E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ChdTew-k-wPbFqCzF2VMwZ8SIERgbYoRWUWOqxJkC3E/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        544,
+        768
+      ],
+      "id": "7922248e-8e18-475a-a574-5f959ac60822",
+      "name": "Get row(s) in sheet3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        992,
+        768
+      ],
+      "id": "dbc19507-0da0-470b-8902-eabaa2711c9e",
+      "name": "Send a text message4",
+      "webhookId": "3ef08bca-05a2-4d14-9ecc-c879c73eb930",
+      "credentials": {
+        "telegramApi": {
+          "id": "3HoOPwQpHlK2i1Fm",
+          "name": "attendmonitor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=🤖 Attendance Intelligence Agent\n\nAvailable Commands:\n\n✅ checkin\nMark today's attendance\n\n📊 today\nCheck today's attendance\n\n📈 status\nView attendance statistics\n\n📋 history\nView recent attendance history\n\n📑 report\nGenerate attendance report\n\n❓ help\nShow available commands",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        1088
+      ],
+      "id": "b64c623e-57bf-445e-a804-bf17b8bb0fad",
+      "name": "Send a text message5",
+      "webhookId": "c4b213bb-89ca-4504-bd41-129844fb3111",
+      "credentials": {
+        "telegramApi": {
+          "id": "3HoOPwQpHlK2i1Fm",
+          "name": "attendmonitor"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "0": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2": {
+      "main": [
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3": {
+      "main": [
+        [
+          {
+            "node": "Send a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4": {
+      "main": [
+        [
+          {
+            "node": "Send a text message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Command": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "0",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet2": {
+      "main": [
+        [
+          {
+            "node": "3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet3": {
+      "main": [
+        [
+          {
+            "node": "4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "10d82e65-1a4b-4850-835a-fe3e8c992637",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "IPdVIMIerNUgJ2Uq",
+  "tags": []
+}
