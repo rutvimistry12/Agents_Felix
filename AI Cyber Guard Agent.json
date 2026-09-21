@@ -1,0 +1,462 @@
+{
+  "name": "AI Cyber Guard Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "25ef556e-7863-492e-a6c2-1c2c202e6b62",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        208
+      ],
+      "id": "b045fecb-68d0-4bff-b780-ca556a25c3d0",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "edJAzo9yaNKu0gXa",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"riskLevel\": \"HIGH\",\n  \"riskScore\": 92,\n  \"threatType\": \"Repeated Failed Login Attempts\",\n  \"suspicious\": true,\n  \"reason\": \"Multiple failed login attempts were detected against an administrative account.\",\n  \"recommendedAction\": \"Review the authentication logs and investigate the source.\",\n  \"incidentRequired\": true\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        624,
+        208
+      ],
+      "id": "513d7cd0-e98d-4520-9e01-2f7ba58eacae",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8129f38d-b92a-42e8-af56-ac6023392002",
+              "name": "eventType",
+              "value": "multiple_failed_login",
+              "type": "string"
+            },
+            {
+              "id": "6c1e090d-5250-4942-bae4-0e09b1438f88",
+              "name": "username",
+              "value": "admin",
+              "type": "string"
+            },
+            {
+              "id": "2517a738-6fe6-429f-8a0a-e00e2c3f3e6c",
+              "name": "sourceIP",
+              "value": "185.220.101.25",
+              "type": "string"
+            },
+            {
+              "id": "5d52e88a-ef38-491f-bd3c-04e0c81e9786",
+              "name": "attempts",
+              "value": "25",
+              "type": "string"
+            },
+            {
+              "id": "d9a2d72d-2c41-457f-8f06-e07bf49b1d13",
+              "name": "timestamp",
+              "value": "2026-09-21 12:30:00",
+              "type": "string"
+            },
+            {
+              "id": "6e29cb35-8fc8-440c-b442-3b5a4177a12a",
+              "name": "location",
+              "value": "Unknown",
+              "type": "string"
+            },
+            {
+              "id": "6f645604-e0ee-45ac-82c8-e211eaa23acc",
+              "name": "device",
+              "value": "Unknown",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "39f5c982-33c1-4587-856d-7c3c63044190",
+      "name": "Security Event Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this security event:\n\nEvent Type: {{ $json.eventType }}\nUsername: {{ $json.username }}\nSource IP: {{ $json.sourceIP }}\nAttempts: {{ $json.attempts }}\nTimestamp: {{ $json.timestamp }}\nLocation: {{ $json.location }}\nDevice: {{ $json.device }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an AI Cyber Security Monitoring Assistant.\n\nAnalyze the provided security event and determine whether it appears suspicious.\n\nAnalyze:\n- Event type\n- Username\n- Source IP\n- Number of attempts\n- Timestamp\n- Location\n- Device\n\nClassify the event as:\nLOW\nMEDIUM\nHIGH\n\nRisk score must be between 0 and 100.\n\nReturn the result according to the Structured Output Parser schema.\n\nDo not invent information that is not present in the input.\n\nThis agent is for defensive security monitoring only.\nDo not perform exploitation, attacks, credential testing, or unauthorized access.\n\nFor HIGH-risk events, incidentRequired should be true.\nFor LOW or MEDIUM events, incidentRequired should normally be false."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "cdbd0db5-3bc3-4044-8f87-0bf05659e709",
+      "name": "AI Security Analyzer"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "862773d3-2ef8-4427-b43b-63a25ee8ff76",
+              "leftValue": "={{ $json.output.riskLevel }}",
+              "rightValue": "HIGH",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        816,
+        0
+      ],
+      "id": "eeac5c9b-c32d-4c6b-b369-e7bbccc36fa2",
+      "name": "Check Risk Level"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "12oJS1Ux1jdPq1Ne5vuAMaJMhpBwAgKuNrO0-f1ulIVs",
+          "mode": "list",
+          "cachedResultName": "AI Cyber Guard Incidents",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12oJS1Ux1jdPq1Ne5vuAMaJMhpBwAgKuNrO0-f1ulIVs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12oJS1Ux1jdPq1Ne5vuAMaJMhpBwAgKuNrO0-f1ulIVs/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $('Security Event Input').item.json.timestamp }}",
+            "eventType": "={{ $('Security Event Input').item.json.eventType }}",
+            "username": "={{ $('Security Event Input').item.json.username }}",
+            "sourceIP": "={{ $('Security Event Input').item.json.sourceIP }}",
+            "attempts": "={{ $('Security Event Input').item.json.sourceIP }}",
+            "riskLevel": "={{ $json.output.riskLevel }}",
+            "riskScore": "={{ $json.output.riskScore }}",
+            "threatType": "={{ $json.output.threatType }}",
+            "status": "OPEN",
+            "suspicious": "={{ $json.output.suspicious }}",
+            "reason": "={{ $json.output.reason }}",
+            "recommendedAction": "={{ $json.output.recommendedAction }}",
+            "incidentRequired": "={{ $json.output.incidentRequired }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "eventType",
+              "displayName": "eventType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "username",
+              "displayName": "username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sourceIP",
+              "displayName": "sourceIP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "riskLevel",
+              "displayName": "riskLevel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "riskScore",
+              "displayName": "riskScore",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "threatType",
+              "displayName": "threatType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "suspicious",
+              "displayName": "suspicious",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recommendedAction",
+              "displayName": "recommendedAction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "incidentRequired",
+              "displayName": "incidentRequired",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1040,
+        -96
+      ],
+      "id": "7208f5b9-8e46-417d-a151-99c14edbc2da",
+      "name": "Store Security Incident",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=🚨 HIGH-RISK SECURITY ALERT  AI Cyber Guard detected a potentially suspicious security event.  Risk Level:\n{{ $json.riskLevel }}  Risk Score: {{ $json.riskScore }}\n Threat: {{ $json.threatType }}\n  Username: {{ $('Security Event Input').item.json.username }}  Source IP: {{ $('Security Event Input').item.json.sourceIP }}  Failed Attempts: {{ $('Security Event Input').item.json.attempts }}  Reason:  {{ $json.reason }}Recommended Action: {{ $json.recommendedAction }}\n Incident Required:{{ $json.incidentRequired }}  Status: OPEN",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1264,
+        -96
+      ],
+      "id": "847c46d1-12e2-4069-81c0-1326f3d4752c",
+      "name": "Send Cyber Security Alert",
+      "webhookId": "15a3de9f-2532-4010-bd71-7e2ab7893cb8",
+      "credentials": {
+        "telegramApi": {
+          "id": "gE8oIDM83A08d9M2",
+          "name": "aicyber"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Security Event Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Security Analyzer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Security Analyzer",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Security Event Input": {
+      "main": [
+        [
+          {
+            "node": "AI Security Analyzer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Security Analyzer": {
+      "main": [
+        [
+          {
+            "node": "Check Risk Level",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Risk Level": {
+      "main": [
+        [
+          {
+            "node": "Store Security Incident",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Security Incident": {
+      "main": [
+        [
+          {
+            "node": "Send Cyber Security Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "26c76673-7915-4155-8622-50404683d333",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "0vOctlGOGie9UbOh",
+  "tags": []
+}
