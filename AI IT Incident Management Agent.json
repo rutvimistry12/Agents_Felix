@@ -1,0 +1,499 @@
+{
+  "name": "AI IT Incident Management Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b8d60f05-80ef-451e-b0a5-1f245ba74c36",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "daea9f87-5595-4c6e-8771-b9af60223792",
+              "name": "incidentTitle",
+              "value": "Payment API Down",
+              "type": "string"
+            },
+            {
+              "id": "40e2cb9b-94ac-4af4-9caa-a597d8fd2ffb",
+              "name": "description",
+              "value": "Payment API is not responding and customers cannot complete payments",
+              "type": "string"
+            },
+            {
+              "id": "c2894f89-b6c0-4d8a-a6ea-28901eb22d9c",
+              "name": "reportedBy",
+              "value": "IT Monitoring",
+              "type": "string"
+            },
+            {
+              "id": "1d07699f-0994-4a38-8a75-04a89d04abc0",
+              "name": "department",
+              "value": "IT",
+              "type": "string"
+            },
+            {
+              "id": "0c817d15-be56-4aee-a5ac-9f34d2a3733d",
+              "name": "affectedService",
+              "value": "Payment API",
+              "type": "string"
+            },
+            {
+              "id": "10c70f24-359d-4ee0-8949-ae66bc8e47a6",
+              "name": "affectedUsers",
+              "value": "500+ customers",
+              "type": "string"
+            },
+            {
+              "id": "f963f689-20ac-45e8-8cf4-d9f4e6749e08",
+              "name": "location",
+              "value": "Production",
+              "type": "string"
+            },
+            {
+              "id": "abe26adf-8de1-4bb2-ac39-9edfe725ae79",
+              "name": "timestamp",
+              "value": "={{$now}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "d8a7cf58-c125-40c2-8210-a64bc2146458",
+      "name": "Incident Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this IT incident:\n\nIncident Title:\n{{$json.incidentTitle}}\n\nDescription:\n{{$json.description}}\n\nReported By:\n{{$json.reportedBy}}\n\nDepartment:\n{{$json.department}}\n\nAffected Service:\n{{$json.affectedService}}\n\nAffected Users:\n{{$json.affectedUsers}}\n\nLocation:\n{{$json.location}}\n\nTimestamp:\n{{$json.timestamp}}",
+        "options": {
+          "systemMessage": "You are an AI IT Incident Management Agent.\n\nYour job is to analyze IT incidents and classify them according to their severity, impact, urgency, category, and required response.\n\nSeverity rules:\n\nCRITICAL:\n- Complete production outage\n- Major business service unavailable\n- Security breach or suspected active attack\n- Large number of users affected\n- Payment or critical business transaction completely unavailable\n- Immediate response required\n\nHIGH:\n- Major functionality unavailable\n- Important service severely degraded\n- Many users affected\n- Significant business impact\n- Requires quick technical response\n\nMEDIUM:\n- Limited functionality affected\n- Small group of users affected\n- Workaround exists\n- Moderate business impact\n\nLOW:\n- Minor issue\n- Cosmetic issue\n- Information request\n- Very limited impact\n- No significant business disruption\n\nAnalyze the incident carefully.\n\nReturn ONLY valid JSON.\n\nDo not use markdown.\nDo not use ```json.\nDo not add explanations outside the JSON.\n\nUse exactly this structure:\n\n{\n  \"incidentId\": \"\",\n  \"severity\": \"\",\n  \"category\": \"\",\n  \"impact\": \"\",\n  \"urgency\": \"\",\n  \"affectedService\": \"\",\n  \"affectedUsers\": \"\",\n  \"summary\": \"\",\n  \"rootCause\": \"\",\n  \"recommendedAction\": \"\",\n  \"assignedTeam\": \"\",\n  \"responseTime\": \"\",\n  \"status\": \"OPEN\"\n}\n\nAllowed severity values:\nCRITICAL, HIGH, MEDIUM, LOW\n\nAllowed category values:\nAPPLICATION, NETWORK, DATABASE, SERVER, SECURITY, HARDWARE, CLOUD, OTHER\n\nAllowed urgency values:\nHIGH, MEDIUM, LOW\n\nThe incidentId should be generated in the format INC001, INC002, etc."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "5b579a89-5601-42e9-9d0d-f8f03404f474",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        208
+      ],
+      "id": "3848e0c0-9528-4f72-a901-d095297370e8",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "edJAzo9yaNKu0gXa",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nlet raw = input.output || input.text || input.response || input;\n\nlet data;\n\nif (typeof raw === 'string') {\n  raw = raw\n    .replace(/^```json\\s*/i, '')\n    .replace(/^```\\s*/i, '')\n    .replace(/\\s*```$/i, '')\n    .trim();\n\n  try {\n    data = JSON.parse(raw);\n  } catch (error) {\n    throw new Error('AI returned invalid JSON: ' + raw);\n  }\n} else {\n  data = raw;\n}\n\nreturn [\n  {\n    json: {\n      incidentId: data.incidentId || 'INC001',\n      severity: String(data.severity || 'LOW').toUpperCase(),\n      category: data.category || 'OTHER',\n      impact: data.impact || '',\n      urgency: String(data.urgency || 'LOW').toUpperCase(),\n      affectedService: data.affectedService || '',\n      affectedUsers: data.affectedUsers || '',\n      summary: data.summary || '',\n      rootCause: data.rootCause || '',\n      recommendedAction: data.recommendedAction || '',\n      assignedTeam: data.assignedTeam || '',\n      responseTime: data.responseTime || '',\n      status: data.status || 'OPEN',\n      createdAt: new Date().toISOString()\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        0
+      ],
+      "id": "384f9366-e990-423e-9df7-bf4fa8c0eeb0",
+      "name": "Parse Incident JSON"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1uHAvNwtBZwEwGF_yHnurIAKRXqgAjSE1zDYslBkfEqQ",
+          "mode": "list",
+          "cachedResultName": "IT Incident Management",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uHAvNwtBZwEwGF_yHnurIAKRXqgAjSE1zDYslBkfEqQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uHAvNwtBZwEwGF_yHnurIAKRXqgAjSE1zDYslBkfEqQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Incident ID": "={{ $json.incidentId }}",
+            "Severity": "={{ $json.severity }}",
+            "Category": "={{ $json.category }}",
+            "Impact": "={{ $json.impact }}",
+            "Urgency": "={{ $json.urgency }}",
+            "Service": "={{ $json.affectedService }}",
+            "Status": "={{ $json.status }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Incident ID",
+              "displayName": "Incident ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Severity",
+              "displayName": "Severity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Impact",
+              "displayName": "Impact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Urgency",
+              "displayName": "Urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Service",
+              "displayName": "Service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "70034a8e-2b15-4688-82ac-c5cc6a15716c",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Severity }}",
+                    "rightValue": "CRITICAL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "b927e691-852f-4482-8df5-6c2bee8e68bc"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "db0c9d56-d96c-41b0-90c7-b86776529098",
+                    "leftValue": "={{ $json.Severity }}",
+                    "rightValue": "HIGH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "95c0da22-6373-4187-ada6-c6c78d160210",
+                    "leftValue": "={{ $json.Severity }}",
+                    "rightValue": "MEDIUM",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "822cfe7e-a70c-4b52-b8d9-1fb151ecedf9",
+                    "leftValue": "={{ $json.Severity }}",
+                    "rightValue": "LOW",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "2f840ebd-a2df-4fa0-b4ca-d079a71a5ae5",
+      "name": "Incident Severity Router"
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=🚨 CRITICAL IT INCIDENT\n\nIncident: {{ $json['Incident ID'] }}\n\nService:{{ $('Append row in sheet').item.json.Service }}\n\n\nSeverity:\n{{ $('Append row in sheet').item.json.Severity }}\n\nImpact:{{ $('Append row in sheet').item.json.Impact }}\n\nAffected Users:{{ $('Parse Incident JSON').item.json.affectedUsers }}\n\nSummary:{{ $('Parse Incident JSON').item.json.summary }}\n\nRecommended Action:{{ $('Parse Incident JSON').item.json.recommendedAction }}\n\n\nAssigned Team:{{ $('Parse Incident JSON').item.json.assignedTeam }}\n\nStatus:{{ $('Parse Incident JSON').item.json.status }}\n\n\n⚠️ Immediate response required.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1488,
+        -208
+      ],
+      "id": "7acaa280-5891-49c4-98c6-d5b39a1f0751",
+      "name": "Send a text message",
+      "webhookId": "ba025ccc-e0b9-46a3-9db9-fa485209be03",
+      "credentials": {
+        "telegramApi": {
+          "id": "gE8oIDM83A08d9M2",
+          "name": "aicyber"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=⚠️ HIGH IT INCIDENT  Incident: {{$json.incidentId}}  Service: {{$json.affectedService}}  Severity: {{$json.severity}}  Impact: {{$json.impact}}  Affected Users: {{$json.affectedUsers}}  Summary: {{$json.summary}}  Recommended Action: {{$json.recommendedAction}}  Assigned Team: {{$json.assignedTeam}}  Response Time: {{$json.responseTime}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1568,
+        -32
+      ],
+      "id": "6eb71f2a-dd67-4158-ad37-4d68ee4dd4a6",
+      "name": "Send a text message1",
+      "webhookId": "e9ebf6e2-bea5-47de-9390-84ab26c7a7bf",
+      "credentials": {
+        "telegramApi": {
+          "id": "gE8oIDM83A08d9M2",
+          "name": "aicyber"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Incident Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Incident Input": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse Incident JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Incident JSON": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Incident Severity Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Incident Severity Router": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "468c351b-95fc-43b3-ba13-05a1bb7e5249",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "uGhBF6wnCCvQZ74Z",
+  "tags": []
+}
