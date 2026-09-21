@@ -1,0 +1,253 @@
+{
+  "name": "Daily News Digest Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a43ce244-273d-4b20-811c-30c52adf264e",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "6ba3fcf8-0b56-4b97-890a-0465919ac782",
+      "name": "Daily Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "newsSources",
+              "name": "newsSources",
+              "value": "https://feeds.bbci.co.uk/news/rss.xml,https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml,https://www.thehindu.com/news/national/feeder/default.rss",
+              "type": "string"
+            },
+            {
+              "id": "maxArticles",
+              "name": "maxArticles",
+              "value": 15,
+              "type": "number"
+            },
+            {
+              "id": "digestTitle",
+              "name": "digestTitle",
+              "value": "Daily News Digest",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "de331fc2-6f1b-4a4f-96c5-baa198d9d688",
+      "name": "News Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const settings = $('News Settings').first().json;\nconst urls = String(settings.newsSources || '')\n  .split(',')\n  .map(s => s.trim())\n  .filter(Boolean);\n\nreturn urls.map((url, index) => ({\n  json: {\n    feedUrl: url,\n    sourceIndex: index + 1\n  }\n}));"
+      },
+      "id": "bd1a85a4-0ac6-4900-a158-09692518b9f4",
+      "name": "Prepare RSS Feeds",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.feedUrl }}",
+        "options": {}
+      },
+      "id": "c020d475-e6bd-4151-8392-fac7f4609d6f",
+      "name": "Fetch RSS Feed",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const maxArticles = Number($('News Settings').first().json.maxArticles || 15);\nconst items = $input.all();\n\nconst seen = new Set();\nconst articles = [];\n\nfor (const item of items) {\n  const j = item.json || {};\n  const title = String(j.title || j.name || '').trim();\n  const link = String(j.link || j.guid || '').trim();\n  const description = String(j.contentSnippet || j.content || j.description || '').replace(/<[^>]*>/g, ' ').trim();\n  const pubDate = j.isoDate || j.pubDate || j.date || new Date().toISOString();\n\n  if (!title) continue;\n\n  const key = (link || title).toLowerCase();\n  if (seen.has(key)) continue;\n  seen.add(key);\n\n  articles.push({\n    title,\n    link,\n    description: description.slice(0, 1200),\n    pubDate,\n    source: String(j.creator || j.author || j.source || 'RSS News')\n  });\n}\n\narticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));\n\nreturn articles.slice(0, maxArticles).map((article, index) => ({\n  json: {\n    rank: index + 1,\n    ...article\n  }\n}));"
+      },
+      "id": "ee16cdec-00bd-480a-a56a-9e3968c5c4c8",
+      "name": "Clean & Deduplicate News",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const articles = $input.all().map(i => i.json);\n\nconst articleText = articles.map((a, i) =>\n  `ARTICLE ${i + 1}\nTitle: ${a.title}\nSource: ${a.source}\nPublished: ${a.pubDate}\nURL: ${a.link}\nDescription: ${a.description}`\n).join('\\n\\n');\n\nreturn [{\n  json: {\n    articleCount: articles.length,\n    articles,\n    aiPrompt: `Create a concise Daily News Digest from the following news articles.\n\nRules:\n1. Group stories into: World, India, Technology, Business, Science, and Other.\n2. Do not invent facts.\n3. Summarize each important story in 2-3 sentences.\n4. Mention the source.\n5. Include the original URL.\n6. Remove obvious duplicates.\n7. If a category has no relevant story, omit it.\n8. Start with 3-5 key highlights.\n9. Use simple, professional English.\n10. Return only the finished digest in clean Markdown.\n\nNEWS:\n${articleText}`\n  }\n}];"
+      },
+      "id": "329a8ccb-01d6-4eb4-9b9f-3d68e592e0cd",
+      "name": "Build AI Digest Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const prompt = $json.aiPrompt || '';\nconst articles = $json.articles || [];\n\nconst lines = articles.map((a, i) =>\n  `${i + 1}. ${a.title} — ${a.source} — ${a.link}`\n).join('\\n');\n\nreturn [{\n  json: {\n    ...$json,\n    digest: `# Daily News Digest\n\n## Key Highlights\n${articles.slice(0, 5).map((a, i) => `${i + 1}. **${a.title}** — ${a.source}`).join('\\n')}\n\n## News Stories\n${lines}\n\n## Summary\n${prompt}\n\n_Note: This workflow currently prepares the digest from RSS feeds. Connect an AI model node after this step to generate AI-written summaries._`\n  }\n}];"
+      },
+      "id": "a81ada8e-37fa-49ca-b871-52e95ff92c17",
+      "name": "Create Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nconst date = new Date().toLocaleDateString('en-IN', {\n  year: 'numeric',\n  month: 'long',\n  day: 'numeric'\n});\n\nreturn [{\n  json: {\n    date,\n    title: $('News Settings').first().json.digestTitle || 'Daily News Digest',\n    articleCount: data.articleCount || 0,\n    digest: data.digest || 'No news available today.'\n  }\n}];"
+      },
+      "id": "f3ea0e7c-e6e9-40f6-b340-8f3cc1151894",
+      "name": "Format Final Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        80
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "News Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Schedule": {
+      "main": [
+        [
+          {
+            "node": "News Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "News Settings": {
+      "main": [
+        [
+          {
+            "node": "Prepare RSS Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare RSS Feeds": {
+      "main": [
+        [
+          {
+            "node": "Fetch RSS Feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch RSS Feed": {
+      "main": [
+        [
+          {
+            "node": "Clean & Deduplicate News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean & Deduplicate News": {
+      "main": [
+        [
+          {
+            "node": "Build AI Digest Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI Digest Prompt": {
+      "main": [
+        [
+          {
+            "node": "Create Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Digest": {
+      "main": [
+        [
+          {
+            "node": "Format Final Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e507bb4c-7ff7-4fbc-9200-513e9292aca6",
+  "meta": {
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "KwA2fCHQvLyW3ztm",
+  "tags": []
+}

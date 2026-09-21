@@ -1,0 +1,794 @@
+{
+  "name": "Advanced Medical Assistance Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Advanced Medical Assistance",
+        "formDescription": "Get general health information, understand symptoms and medical terminology,\nreview medical reports, prepare for medical appointments, and receive\nappropriate guidance about when professional medical care may be needed.\n\nThis service does not replace a doctor or emergency medical services.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Full Name",
+              "fieldName": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Gender",
+              "fieldType": "radio",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Male"
+                  },
+                  {
+                    "option": "Female"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Current Symptoms",
+              "fieldType": "textarea",
+              "fieldName": "symptoms",
+              "placeholder": "Describe your curent symptones in details",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Duration of Symptoms",
+              "fieldName": "Duration",
+              "placeholder": "e.g., 3 days, 2 weeks",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Severity Level",
+              "fieldType": "dropdown",
+              "fieldName": "severity",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Mild"
+                  },
+                  {
+                    "option": "Moderate"
+                  },
+                  {
+                    "option": "Severe"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Medical history",
+              "fieldName": "Medical history",
+              "placeholder": "Any chronic condition,past surgeries,etc"
+            },
+            {
+              "fieldLabel": "Current Medications",
+              "fieldType": "textarea",
+              "fieldName": "Medications",
+              "placeholder": "List all Medications you are currently talking"
+            },
+            {
+              "fieldLabel": "Allergies",
+              "fieldName": "Allergies",
+              "placeholder": "Any known allergies to medications,food, etc"
+            },
+            {
+              "fieldLabel": "Lifestyle Factors",
+              "fieldName": "Lifestyle factors",
+              "placeholder": "Smoking,alcohol,exercise habits,diet,etc."
+            },
+            {
+              "fieldLabel": "age",
+              "fieldType": "number",
+              "fieldName": "age",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Emergency Symptoms / Warning Signs",
+              "fieldType": "textarea",
+              "fieldName": "emergency_symptoms",
+              "placeholder": "Have you experienced severe difficulty breathing, loss of consciousness, severe chest pressure/pain, sudden weakness, severe bleeding, or another symptom that feels immediately dangerous?"
+            },
+            {
+              "fieldLabel": "Existing Conditions",
+              "fieldType": "textarea",
+              "placeholder": "Existing Conditions? how are you now ?",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Medical Report",
+              "fieldType": "file"
+            },
+            {
+              "fieldLabel": "Assistant Type",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Symptoms"
+                  },
+                  {
+                    "option": "Medication Information"
+                  },
+                  {
+                    "option": "Medical Report"
+                  },
+                  {
+                    "option": "General Health"
+                  },
+                  {
+                    "option": "Appointment Preparation"
+                  },
+                  {
+                    "option": "First Aid Information"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Thank you ,your medical information has been received and it being assessed.you will  receive a detailed report shortly "
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -560,
+        -16
+      ],
+      "id": "cd4f9a88-fddb-47a6-be87-488e4a97937b",
+      "name": "On form submission",
+      "webhookId": "cf0bee62-2a0f-48d4-bbbd-f5f7029fa4c0"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -112,
+        160
+      ],
+      "id": "ea4852a1-cec5-4657-8a09-7540c3d9bd6a",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4a5117b4-f53c-4713-bc63-3c5efc9867ea",
+              "name": "name",
+              "value": "={{ $json.Name }}",
+              "type": "string"
+            },
+            {
+              "id": "31b93b93-40e4-4e23-ad82-be37fac83c48",
+              "name": "gender",
+              "value": "={{ $json.Gender }}",
+              "type": "string"
+            },
+            {
+              "id": "f0fb4b0b-fe2d-4a25-af29-4cac274a56bc",
+              "name": "symptoms",
+              "value": "={{ $json.symptoms }}",
+              "type": "string"
+            },
+            {
+              "id": "396bdb4e-ad88-4441-9012-85fdfe54b822",
+              "name": "duration",
+              "value": "={{ $json.Duration }}",
+              "type": "string"
+            },
+            {
+              "id": "95117133-3dfb-4494-abd2-bdca67d74bda",
+              "name": "severity",
+              "value": "={{ $json.severity }}",
+              "type": "string"
+            },
+            {
+              "id": "7dd3ad94-b7d5-4853-868f-b586658d8589",
+              "name": "medicalhistroy",
+              "value": "={{ $json['Medical history'] }}",
+              "type": "string"
+            },
+            {
+              "id": "1d229ffb-eabf-4b62-9ab3-c56a86ce7e36",
+              "name": "Medications",
+              "value": "={{ $json.Medications }}",
+              "type": "string"
+            },
+            {
+              "id": "dad4268d-8470-4f8a-84f9-15ed2adebcd6",
+              "name": "Allergies",
+              "value": "={{ $json.Allergies }}",
+              "type": "string"
+            },
+            {
+              "id": "d5e5412a-df9c-4ede-931b-18053feebd03",
+              "name": "Lifestyle factors",
+              "value": "={{ $json['Lifestyle factors'] }}",
+              "type": "string"
+            },
+            {
+              "id": "a5ad8135-2271-4fbb-ab18-7225cd6e907e",
+              "name": "age",
+              "value": "={{ $json.age }}",
+              "type": "number"
+            },
+            {
+              "id": "cd033b68-eed8-43e3-8021-f11073d5723c",
+              "name": "emergency_symptoms",
+              "value": "={{ $json.emergency_symptoms }}",
+              "type": "string"
+            },
+            {
+              "id": "36247f40-a213-4030-bc36-16ea57d14dd9",
+              "name": "Existing Conditions",
+              "value": "={{ $json['Existing Conditions'] }}",
+              "type": "string"
+            },
+            {
+              "id": "b4db4d67-261a-41b4-a3fe-9987da1b34fa",
+              "name": "Medical Report",
+              "value": "={{ $json['Medical Report'] }}",
+              "type": "string"
+            },
+            {
+              "id": "05bd3754-dc74-4732-bfa0-d7d9f4d81d47",
+              "name": "Assistant Type",
+              "value": "={{ $json['Assistant Type'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -336,
+        -16
+      ],
+      "id": "a0123c3b-aac0-4911-90b5-ff85455da3b9",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Patient Information:\n\nName: {{ $json.name }}\nAge: {{ $json.age }}\nGender: {{ $json.gender }}\n\nSymptoms:\n{{ $json.symptoms }}\n\nDuration:\n{{ $json.duration }}\n\nSeverity:\n{{ $json.severity }}\n\nEmergency Symptoms:\n{{ $json.emergency_symptoms }}\n\nMedical History:\n{{ $json.medicalhistroy }}\n\nExisting Conditions:\n{{ $json['Existing Conditions'] }}\n\nMedications:\n{{ $json.Medications }}\n\nAllergies:\n{{ $json.Allergies }}\n\nLifestyle Factors:\n{{ $json['Lifestyle factors'] }}",
+        "options": {
+          "systemMessage": "You are an Emergency Medical Safety Triage Agent.\n\nAnalyze the patient's submitted information and classify the situation.\n\nIf the patient reports:\n- inability to breathe\n- severe difficulty breathing\n- unconsciousness\n- severe chest pain\n- seizure\n- severe uncontrolled bleeding\n- severe allergic reaction\n- poisoning or overdose\n- sudden stroke-like symptoms\n- or another potentially life-threatening warning sign\n\nreturn exactly:\n\nEMERGENCY\n\nIf the situation may require prompt professional medical attention but does\nnot clearly appear immediately life-threatening, return exactly:\n\nURGENT\n\nOtherwise return exactly:\n\nNON_EMERGENCY\n\nImportant:\nThe user's selected severity must NOT override a clearly reported\npotential emergency.\n\nDo not diagnose.\nDo not prescribe medication.\nDo not provide medication dosage.\nDo not explain your answer.\n\nReturn ONLY one of:\n\nEMERGENCY\nURGENT\nNON_EMERGENCY"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -112,
+        -16
+      ],
+      "id": "e932fa2e-cb8b-4559-93dc-4a062daa1dda",
+      "name": "Emergency & Safety Triage AI"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ca17f1c7-921d-4979-a112-9032aecbeff3",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "EMERGENCY",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        240,
+        32
+      ],
+      "id": "845a0f3b-80fb-43e5-9394-230575872c95",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6aacd9d3-0bea-4e7f-a854-c3bf88aa93d5",
+              "name": "response",
+              "value": "⚠️ URGENT MEDICAL ATTENTION  The information submitted includes a potentially serious warning sign.  If you are currently unable to breathe or experiencing severe difficulty breathing, seek immediate emergency medical care.  Contact your local emergency medical service or go to the nearest emergency department now.  Do not rely on this AI system to determine whether your situation is safe.  This system provides general health information and does not replace a qualified healthcare professional.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        576,
+        -224
+      ],
+      "id": "1b09e1e7-8459-4e81-8497-39a2d7e8d507",
+      "name": "Emergency Response"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Edit Fields').item.json['Assistant Type'] }}",
+                    "rightValue": "Symptoms",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "629c6301-fdd9-4d1d-a20f-b02fda805b0b"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c82472f3-3e5c-4eee-8b30-423fcf66c8cd",
+                    "leftValue": "={{ $('Edit Fields').item.json['Assistant Type'] }}",
+                    "rightValue": "Medication Information",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "1964571f-5a96-44bd-90d4-7ad3cd7648e5",
+                    "leftValue": "={{ $('Edit Fields').item.json['Assistant Type'] }}",
+                    "rightValue": "Medical Report",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "990f58b7-85c9-448c-8c2c-49a5f99363b6",
+                    "leftValue": "={{ $('Edit Fields').item.json['Assistant Type'] }}",
+                    "rightValue": "General Health",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "1832ebd6-5fe6-4927-98b6-d9ebc7bd0067",
+                    "leftValue": "={{ $('Edit Fields').item.json['Assistant Type'] }}",
+                    "rightValue": "Appointment Preparation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3444e648-3d56-4f3b-b843-f074747e9725",
+                    "leftValue": "={{ $('Edit Fields').item.json['Assistant Type'] }}",
+                    "rightValue": "First Aid Information",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        80
+      ],
+      "id": "d88836e4-564e-48ca-9a0d-a2180f086b86",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Patient Information:\n\nName:\n{{ $('Edit Fields').item.json.name }}\n\nAge:\n{{ $('Edit Fields').item.json.age }}\n\nGender:\n{{ $('Edit Fields').item.json.gender }}\n\nSymptoms:\n{{ $('Edit Fields').item.json.symptoms }}\n\nDuration:\n{{ $('Edit Fields').item.json.duration }}\n\nSeverity:\n{{ $('Edit Fields').item.json.severity }}\n\nMedical History:\n{{ $('Edit Fields').item.json.medicalhistroy }}\n\nMedications:\n{{ $('Edit Fields').item.json.Medications }}\n\nAllergies:\n{{ $('Edit Fields').item.json.Allergies }}\n\nLifestyle Factors:\n{{ $('Edit Fields').item.json['Lifestyle factors'] }}\n\nExisting Conditions:\n{{ $('Edit Fields').item.json['Existing Conditions'] }}\n\nMedical Report:\n{{ $('Edit Fields').item.json['Medical Report'] }}\n\nRequested Assistant Type:\n{{ $('Edit Fields').item.json['Assistant Type'] }}\n\nProvide a clear response appropriate for the requested Assistant Type.",
+        "options": {
+          "systemMessage": "You are an Advanced Medical Information Assistant.\n\nYour role is to provide general, educational health information based on the information submitted by the user.\n\nYou are not a doctor and must never present yourself as a doctor.\n\nSAFETY RULES:\n\n- Do not diagnose diseases with certainty.\n- Do not prescribe medication.\n- Do not recommend medication dosages.\n- Do not tell the user to start, stop, or change prescribed medication.\n- Do not invent medical information.\n- Do not replace professional medical evaluation.\n- If the information suggests a potentially serious situation, clearly recommend appropriate professional medical care.\n- If the user describes a medical emergency, prioritize emergency medical care rather than providing lengthy educational information.\n\nASSISTANT TYPES:\n\nSymptoms:\nExplain symptoms in general educational terms and suggest what the user may discuss with a healthcare professional.\n\nMedication Information:\nExplain general medication purpose, common uses, common side effects, precautions, and questions to discuss with a pharmacist or doctor. Do not provide dosage instructions or treatment changes.\n\nMedical Report:\nExplain medical terminology and reported values in simple language. Do not diagnose based on the report.\n\nGeneral Health:\nProvide general health, wellness, lifestyle, sleep, nutrition, and prevention information.\n\nAppointment Preparation:\nSummarize the user's concern and provide useful questions they can ask a healthcare professional.\n\nFirst Aid Information:\nProvide general safety-focused first-aid information. Recommend professional medical care when appropriate.\n\nUse simple, clear language.\n\nAlways distinguish general educational information from professional medical advice."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        768,
+        144
+      ],
+      "id": "35934ac1-bb84-48bd-82d2-be6922e999c0",
+      "name": "Medical Assistance AI"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        640,
+        352
+      ],
+      "id": "8ae9ceac-1a8e-40eb-9e6d-b479c2518422",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8c2028f9-9cc4-4426-9be1-cdbd80141c52",
+              "name": "response",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1088,
+        176
+      ],
+      "id": "eff3e969-210e-464b-92cd-00aebb7c3416",
+      "name": "Final Response"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Jd5ozGOJb05hpjTMNETQ8cXX3LRGGaOABXNpIvFFAJI",
+          "mode": "list",
+          "cachedResultName": "Advanced Medical Assistance ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Jd5ozGOJb05hpjTMNETQ8cXX3LRGGaOABXNpIvFFAJI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Jd5ozGOJb05hpjTMNETQ8cXX3LRGGaOABXNpIvFFAJI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Emergency Response": "={{ $json.response }}",
+            "Medical Assistant ": "={{ $json.response }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Emergency Response",
+              "displayName": "Emergency Response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Medical Assistant ",
+              "displayName": "Medical Assistant ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1312,
+        -64
+      ],
+      "id": "79ab3f0e-18ed-4b62-ade1-e301c1fd7e1b",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Emergency & Safety Triage AI",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Emergency & Safety Triage AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Emergency & Safety Triage AI": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Emergency Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Medical Assistance AI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Medical Assistance AI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Medical Assistance AI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Medical Assistance AI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Medical Assistance AI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Medical Assistance AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Medical Assistance AI",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Medical Assistance AI": {
+      "main": [
+        [
+          {
+            "node": "Final Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Emergency Response": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Response": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "13a68a23-0ff5-48a8-af41-d4034c895087",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "uuakGjxmxGtDqztX",
+  "tags": []
+}

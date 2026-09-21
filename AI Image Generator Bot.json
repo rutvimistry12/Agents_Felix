@@ -1,0 +1,93 @@
+{
+  "name": "AI Image Generator Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -368,
+        -96
+      ],
+      "id": "2f234176-2e55-4019-8438-522eb125cd8b",
+      "name": "Telegram Trigger",
+      "webhookId": "46cbdc24-1a56-4648-ae8d-02db06b1ecb4",
+      "credentials": {
+        "telegramApi": {
+          "id": "jipTbi0WuA958upY",
+          "name": "aiimagegenagent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-lite-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-flash-lite-latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Convert the user's request into a detailed image-generation prompt.\n\nUser request:\n{{ $json.message.text }}\n\nReturn ONLY the image prompt.\nDo not include explanations, hashtags, markdown, or extra text."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        -96
+      ],
+      "id": "6faf7723-b82a-478c-9805-3b31fa315af0",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ebc371aa-dc46-4f05-a5c3-89da5f64c307",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "vcpepu4eZEFN3b3q",
+  "tags": []
+}

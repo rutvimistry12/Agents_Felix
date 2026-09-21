@@ -1,0 +1,258 @@
+{
+  "name": "Multi Language Translator Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Multi Language Translator",
+        "formDescription": "Translate text between multiple languages using an AI-powered translation agent. Enter your text, select the source and target languages, and receive an accurate translated result.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Enter Text",
+              "fieldType": "textarea",
+              "fieldName": "text",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Select Target Language",
+              "fieldType": "dropdown",
+              "fieldName": "Target Language",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Hindi"
+                  },
+                  {
+                    "option": "Gujarati"
+                  },
+                  {
+                    "option": "Marathi"
+                  },
+                  {
+                    "option": "Bengali"
+                  },
+                  {
+                    "option": "Punjabi"
+                  },
+                  {
+                    "option": "Tamil"
+                  },
+                  {
+                    "option": "Telugu"
+                  },
+                  {
+                    "option": "Kannada"
+                  },
+                  {
+                    "option": "Malayalam"
+                  },
+                  {
+                    "option": "Odia"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Source Language",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Auto Detect"
+                  },
+                  {
+                    "option": "Hindi"
+                  },
+                  {
+                    "option": "Gujarati"
+                  },
+                  {
+                    "option": "Marathi"
+                  },
+                  {
+                    "option": "Bengali"
+                  },
+                  {
+                    "option": "Punjabi"
+                  },
+                  {
+                    "option": "Tamil"
+                  },
+                  {
+                    "option": "Telugu"
+                  },
+                  {
+                    "option": "Kannada"
+                  },
+                  {
+                    "option": "Malayalam"
+                  },
+                  {
+                    "option": "Odia"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -272,
+        32
+      ],
+      "id": "71a582e6-010a-43d4-b34b-748d538a31b2",
+      "name": "Multi Language Translator",
+      "webhookId": "f8ccee79-4722-4ce5-8418-3783be8173d5"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Translate this text:\n\nText:{{ $json.text }}\n\nSource Language: {{ $json[\"Source Language\"] }}\n\nTarget Language: {{ $json[\"Target Language\"] }}\n\nReturn only the translated text.",
+        "options": {
+          "systemMessage": "You are a Multi-Language Translator Agent.\n\nYour task is to translate user-provided text accurately between English and the following 10 Indian languages:\n\n1. Hindi\n2. Gujarati\n3. Marathi\n4. Bengali\n5. Punjabi\n6. Tamil\n7. Telugu\n8. Kannada\n9. Malayalam\n10. Odia\n\nRules:\n- Automatically understand the source language when it is not provided.\n- Translate only into the selected target language.\n- Preserve the original meaning and context.\n- Do not add explanations unless requested.\n- Do not summarize the text.\n- Do not change names, numbers, dates, URLs, email addresses, or technical terms unnecessarily.\n- Preserve paragraphs and formatting where possible.\n- Use natural, grammatically correct language.\n- For Gujarati, use Gujarati script.\n- For Hindi, use Devanagari script.\n- For Marathi, use Devanagari script.\n- For Bengali, use Bengali script.\n- For Punjabi, use Gurmukhi script.\n- For Tamil, use Tamil script.\n- For Telugu, use Telugu script.\n- For Kannada, use Kannada script.\n- For Malayalam, use Malayalam script.\n- For Odia, use Odia script.\n\nReturn only the translated text."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -112,
+        16
+      ],
+      "id": "34543233-8fdf-40c2-96ac-eb3fb610723b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -256,
+        224
+      ],
+      "id": "aab4d5e5-1ffd-4e52-be9d-6870584e9f35",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "output",
+        "options": {
+          "fileName": "translation.txt"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        256,
+        16
+      ],
+      "id": "10b8b006-257e-4c53-befb-c217c3f96565",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "name": "translation.txt",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        480,
+        16
+      ],
+      "id": "60c2eae6-c6b1-4d52-bd72-330d40d4e82f",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3MPy9hFCjEhOCi5m",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Multi Language Translator": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "70f878e7-e058-487e-9e64-11103a3a0148",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "SEMZimCmTxAeo86g",
+  "tags": []
+}

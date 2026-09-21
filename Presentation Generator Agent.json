@@ -1,0 +1,437 @@
+{
+  "name": "Presentation Generator Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d3cf5f6c-b989-4e1b-ad35-fa381b39fc4e",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1c853ec-06c5-4240-81e8-c295100b1dcc",
+              "name": "Topic",
+              "value": "Artificial Intelligence",
+              "type": "string"
+            },
+            {
+              "id": "e89a2a56-ec47-4c98-9222-c172680fbe56",
+              "name": "Slides",
+              "value": "5",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "dc2e0e7a-1572-4a38-9fe2-51d7d830f73f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create a complete professional presentation using the information provided below.\n\nUSER INPUT:\n\n{{ JSON.stringify($json) }}\n\nPRESENTATION REQUIREMENTS:\n\n1. Understand the provided topic/content.\n2. Create a suitable presentation title and subtitle.\n3. Identify the target audience and presentation purpose.\n4. Create a logical slide-by-slide structure.\n5. Use approximately 8–12 slides unless the provided requirements specify a different number.\n6. Start with an introduction and end with a conclusion and Q&A.\n7. Keep slide content concise and presentation-friendly.\n8. Use 3–6 bullet points per slide.\n9. Add speaker notes for every slide.\n10. Add a visual suggestion for every slide.\n11. Create an AI image-generation prompt for every slide.\n12. Add a suitable layout recommendation for every slide.\n13. Maintain a consistent professional design throughout the presentation.\n14. Include examples, applications, advantages, challenges, or comparisons when relevant to the topic.\n15. Do not invent unsupported facts or statistics.\n16. Do not add information that contradicts the provided content.\n17. Make the presentation easy for the presenter to explain.\n\nIf the input contains project information, include where relevant:\n\n* Project overview\n* Problem statement\n* Objectives\n* Technologies used\n* Features\n* Architecture / workflow\n* Implementation\n* Results\n* Challenges\n* Future scope\n* Conclusion\n\nIf the input is an academic topic, include where relevant:\n\n* Definition\n* Introduction\n* Key concepts\n* Working / process\n* Examples\n* Applications\n* Advantages\n* Limitations\n* Conclusion\n\nIf the input is a business topic, include where relevant:\n\n* Problem\n* Solution\n* Market/use case\n* Benefits\n* Process\n* Challenges\n* Future opportunities\n* Conclusion\n\nReturn ONLY valid JSON according to the exact structure defined in the System Message.\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an AI Presentation Generator.\n\nYour task is to transform the user's topic, notes, requirements, or provided content into a clear, professional, well-structured presentation.\n\nYour presentation should be useful for students, professionals, business presentations, technical presentations, project demonstrations, and educational purposes.\n\nCORE RULES:\n\n1. Understand the user's topic and requirements before creating the presentation.\n2. Use only information provided by the user when the user supplies source content.\n3. Do not invent specific facts, statistics, research results, quotations, names, or references.\n4. If the user provides insufficient information for a factual claim, keep the content general rather than inventing details.\n5. Organize information logically from introduction to conclusion.\n6. Avoid unnecessary text on slides.\n7. Use concise bullet points instead of long paragraphs.\n8. Make every slide easy to understand and present verbally.\n9. Maintain a professional and consistent structure.\n10. Avoid repeating the same information across multiple slides.\n\nPRESENTATION STRUCTURE:\n\nCreate:\n\n* Presentation title\n* Subtitle\n* Introduction\n* Main topic sections\n* Important concepts or key points\n* Examples where appropriate\n* Advantages / benefits where relevant\n* Challenges / limitations where relevant\n* Practical applications / use cases where relevant\n* Conclusion\n* Thank-you / Q&A slide\n\nSLIDE RULES:\n\nFor every slide provide:\n\n* Slide number\n* Slide title\n* Slide purpose\n* 3–6 concise bullet points\n* Speaker notes\n* Visual suggestion\n* Image generation prompt\n* Layout suggestion\n\nVISUAL RULES:\n\nCreate a useful visual suggestion for every slide.\n\nThe image generation prompt should:\n\n* Match the slide topic.\n* Describe the main visual subject.\n* Describe the environment/background.\n* Describe composition.\n* Describe lighting/style when useful.\n* Be suitable for a professional presentation.\n* Avoid unsupported facts or misleading visuals.\n* Avoid unnecessary text inside generated images.\n\nDESIGN RULES:\n\nSuggest:\n\n* Presentation theme\n* Color style\n* Font style\n* Layout style\n* Visual style\n\nKeep the design modern, clean, readable, and professional.\n\nSPEAKER NOTES:\n\nSpeaker notes should explain what the presenter can say while presenting the slide.\n\nDo not simply repeat the slide bullets.\nKeep speaker notes natural and easy to speak.\n\nOUTPUT RULE:\n\nReturn ONLY valid JSON.\n\nDo not return Markdown.\nDo not return code fences.\nDo not add explanations outside the JSON.\n\nReturn exactly this structure:\n\n{\n\"presentation_title\": \"Presentation title\",\n\"subtitle\": \"Presentation subtitle\",\n\"audience\": \"Target audience\",\n\"purpose\": \"Purpose of the presentation\",\n\"theme\": {\n\"style\": \"Modern professional\",\n\"color_style\": \"Professional color palette\",\n\"font_style\": \"Clean readable fonts\",\n\"layout_style\": \"Clean and minimal\"\n},\n\"slides\": [\n{\n\"slide_number\": 1,\n\"title\": \"Slide title\",\n\"purpose\": \"Purpose of this slide\",\n\"bullet_points\": [\n\"Point 1\",\n\"Point 2\",\n\"Point 3\"\n],\n\"speaker_notes\": \"What the presenter should explain\",\n\"visual_suggestion\": \"Recommended visual for this slide\",\n\"image_prompt\": \"Detailed prompt for generating the slide visual\",\n\"layout\": \"Recommended slide layout\"\n}\n],\n\"conclusion\": \"Overall conclusion\",\n\"q_and_a\": \"Questions and Answers\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "61fa4914-b6f2-4631-afc6-ba3cd0078c43",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\"presentation_title\": \"Introduction to Artificial Intelligence\",\n\"subtitle\": \"Understanding AI, Applications and Future Scope\",\n\"audience\": \"Students\",\n\"purpose\": \"Educational presentation\",\n\"theme\": {\n\"style\": \"Modern professional\",\n\"color_style\": \"Professional technology theme\",\n\"font_style\": \"Clean readable fonts\",\n\"layout_style\": \"Clean and minimal\"\n},\n\"slides\": [\n{\n\"slide_number\": 1,\n\"title\": \"Introduction to Artificial Intelligence\",\n\"purpose\": \"Introduce the presentation topic\",\n\"bullet_points\": [\n\"What is Artificial Intelligence?\",\n\"Why AI is important\",\n\"Where AI is used\"\n],\n\"speaker_notes\": \"Introduce the topic and briefly explain why artificial intelligence has become important.\",\n\"visual_suggestion\": \"Futuristic AI concept with a human and digital intelligence interface\",\n\"image_prompt\": \"Professional presentation visual showing artificial intelligence as a modern digital intelligence concept, human interacting with an AI interface, clean technology background, modern professional style, suitable for a presentation slide, no unnecessary text, widescreen composition.\",\n\"layout\": \"Title with large hero visual and short supporting text\"\n},\n{\n\"slide_number\": 2,\n\"title\": \"What is Artificial Intelligence?\",\n\"purpose\": \"Explain the basic concept\",\n\"bullet_points\": [\n\"Definition of AI\",\n\"Machines performing intelligent tasks\",\n\"Learning, reasoning and problem solving\"\n],\n\"speaker_notes\": \"Explain the basic meaning of artificial intelligence and how it enables machines to perform tasks that normally require human intelligence.\",\n\"visual_suggestion\": \"Diagram showing human intelligence connected to an AI system\",\n\"image_prompt\": \"Clean professional AI concept diagram showing human intelligence connected to a digital artificial intelligence system, modern technology visuals, minimal background, presentation-ready widescreen composition.\",\n\"layout\": \"Two-column layout with text on the left and visual on the right\"\n}\n],\n\"conclusion\": \"Artificial intelligence is an important technology with applications across many fields.\",\n\"q_and_a\": \"Questions and Answers\"\n}\n",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        624,
+        208
+      ],
+      "id": "bbe1e70a-267a-4b49-b6a7-caddd5923e4e",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        208
+      ],
+      "id": "a72fcd71-a122-44ed-82b7-cd4e38fecf5f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        320
+      ],
+      "id": "0cb9caf0-2dbf-484c-8fc7-06f53f6486ac",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "1xbHSS32YlQmO3PYMlil8PRR4RvHpH8lRj5xJ2Gmk8F4",
+          "mode": "list",
+          "cachedResultName": "PRESENTATION",
+          "cachedResultUrl": "https://docs.google.com/presentation/d/1xbHSS32YlQmO3PYMlil8PRR4RvHpH8lRj5xJ2Gmk8F4/edit?usp=drivesdk"
+        },
+        "name": "File ID: 1xbHSS32YlQmO3PYMlil8PRR4RvHpH8lRj5xJ2Gmk8F4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        816,
+        0
+      ],
+      "id": "f7f22162-ee8c-4652-ba89-dad43186de69",
+      "name": "Copy file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3MPy9hFCjEhOCi5m",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "replaceText",
+        "presentationId": "={{ $json.id }}",
+        "textUi": {
+          "textValues": [
+            {
+              "matchCase": true,
+              "text": "{{PRESENTATION_TITLE}}",
+              "replaceText": "={{ $('AI Agent').item.json.output.presentation_title }}"
+            },
+            {
+              "matchCase": true,
+              "text": "{{SLIDE1_TITLE}}",
+              "replaceText": "={{ $('AI Agent').item.json.output.slides[0].title }}"
+            },
+            {
+              "matchCase": true,
+              "text": "{{SLIDE1_CONTENT}}",
+              "replaceText": "={{ $('AI Agent').item.json.output.slides[0].purpose }}\n{{ $('AI Agent').item.json.output.slides[0].bullet_points }}"
+            },
+            {
+              "matchCase": true,
+              "text": "{{SLIDE2_TITLE}}",
+              "replaceText": "={{ $('AI Agent').item.json.output.slides[1].title }}"
+            },
+            {
+              "matchCase": true,
+              "text": "{{SLIDE2_CONTENT}}",
+              "replaceText": "={{ $('AI Agent').item.json.output.slides[1].purpose }}\n{{ $('AI Agent').item.json.output.slides[1].bullet_points }}"
+            },
+            {
+              "matchCase": true,
+              "text": "{{SLIDE3_TITLE}}",
+              "replaceText": "={{ $('AI Agent').item.json.output.slides[2].title }}"
+            },
+            {
+              "matchCase": true,
+              "text": "{{SLIDE3_CONTENT}}",
+              "replaceText": "={{ $('AI Agent').item.json.output.slides[2].purpose }}\n\n{{ $('AI Agent').item.json.output.slides[2].bullet_points }}"
+            },
+            {
+              "matchCase": true,
+              "text": "{{SLIDE4_TITLE}}",
+              "replaceText": "={{ $('AI Agent').item.json.output.slides[3].title }}"
+            },
+            {
+              "matchCase": true,
+              "text": "{{SLIDE4_CONTENT}}",
+              "replaceText": "={{ $('AI Agent').item.json.output.slides[3].purpose }}\n{{ $('AI Agent').item.json.output.slides[3].bullet_points }}"
+            },
+            {
+              "matchCase": true,
+              "text": "{{SLIDE5_TITLE}}",
+              "replaceText": "={{ $('AI Agent').item.json.output.slides[4].title }}"
+            },
+            {
+              "text": "{{SLIDE5_CONTENT}}",
+              "replaceText": "={{ $('AI Agent').item.json.output.slides[4].purpose }}\n{{ $('AI Agent').item.json.output.slides[4].bullet_points }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSlides",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "38eab9f2-0e55-47f8-a443-3c00da49ce0b",
+      "name": "Replace text in a presentation",
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "AjY7YLkcghKMR3zG",
+          "name": "Google Slides account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "1xbHSS32YlQmO3PYMlil8PRR4RvHpH8lRj5xJ2Gmk8F4",
+          "mode": "list",
+          "cachedResultName": "PRESENTATION",
+          "cachedResultUrl": "https://docs.google.com/presentation/d/1xbHSS32YlQmO3PYMlil8PRR4RvHpH8lRj5xJ2Gmk8F4/edit?usp=drivesdk"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone",
+            "allowFileDiscovery": true
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "575a6409-3ea6-48f1-bdfb-011d8b04b720",
+      "name": "Share file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3MPy9hFCjEhOCi5m",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1VhtjZVliNVevSOZQJKuDopCxGrXYahbF7KLCExioXyk",
+          "mode": "list",
+          "cachedResultName": "AI Presentation Generator",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VhtjZVliNVevSOZQJKuDopCxGrXYahbF7KLCExioXyk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VhtjZVliNVevSOZQJKuDopCxGrXYahbF7KLCExioXyk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Presenation ttile": "={{ $('AI Agent').item.json.output.presentation_title }}",
+            "link": "={{ 'https://docs.google.com/presentation/d/' + $('Copy file').item.json.id + '/edit' }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Presenation ttile",
+              "displayName": "Presenation ttile",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "link",
+              "displayName": "link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1488,
+        0
+      ],
+      "id": "f2625545-f8e1-46c2-84fc-4451b3f7a08b",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Copy file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy file": {
+      "main": [
+        [
+          {
+            "node": "Replace text in a presentation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace text in a presentation": {
+      "main": [
+        [
+          {
+            "node": "Share file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share file": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a12f9b89-5fea-4fa8-80f9-e2198bafe964",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "1ONYBg7u2fPKSaAk",
+  "tags": []
+}

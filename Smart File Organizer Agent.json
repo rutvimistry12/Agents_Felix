@@ -1,0 +1,459 @@
+{
+  "name": "Smart File Organizer Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "58d4d2cc-b4df-48ce-9902-fdf1fd21b5e8",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1760,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "243b08d3-5d94-48c1-97ed-61fd0b8f9c4e",
+      "name": "Auto Organizer Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1760,
+        896
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "sourceFolderId",
+              "name": "sourceFolderId",
+              "value": "https://drive.google.com/drive/u/1/folders/18mAlhRpKL6lXTfJ3vVfn9RRekUPt5UE5",
+              "type": "string"
+            },
+            {
+              "id": "destinationRootFolderId",
+              "name": "destinationRootFolderId",
+              "value": "https://drive.google.com/drive/u/1/folders/18mAlhRpKL6lXTfJ3vVfn9RRekUPt5UE5",
+              "type": "string"
+            },
+            {
+              "id": "dryRun",
+              "name": "dryRun",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e9e7e020-4c0c-44a3-9670-b3c8c512e0c0",
+      "name": "Organizer Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1536,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "list"
+      },
+      "id": "42f20e85-b7ed-42a5-996a-6d19cdda104f",
+      "name": "List Files",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1328,
+        784
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3MPy9hFCjEhOCi5m",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const categories = {\n  Documents:/\\.(pdf|doc|docx|txt|rtf|odt|md)$/i,\n  Images:/\\.(jpg|jpeg|png|gif|webp|bmp|svg|tiff)$/i,\n  Spreadsheets:/\\.(xls|xlsx|csv|ods|tsv)$/i,\n  Presentations:/\\.(ppt|pptx|odp)$/i,\n  Archives:/\\.(zip|rar|7z|tar|gz)$/i,\n  Audio:/\\.(mp3|wav|aac|flac|m4a|ogg)$/i,\n  Video:/\\.(mp4|mkv|avi|mov|webm|wmv)$/i,\n  Code:/\\.(js|ts|py|java|php|html|css|json|xml|sql|cpp|c|cs|go|rs|sh)$/i\n};\nfunction classify(name,mime){\n  const n=String(name||''), m=String(mime||'').toLowerCase();\n  for(const [c,re] of Object.entries(categories)) if(re.test(n)) return c;\n  if(m.includes('image')) return 'Images';\n  if(m.includes('pdf')||m.includes('document')||m.includes('text')) return 'Documents';\n  if(m.includes('spreadsheet')||m.includes('csv')) return 'Spreadsheets';\n  if(m.includes('presentation')) return 'Presentations';\n  if(m.includes('audio')) return 'Audio';\n  if(m.includes('video')) return 'Video';\n  return 'Other';\n}\nreturn $input.all().filter(i=>!String(i.json.mimeType||'').includes('folder')).map(i=>({\n  json:{\n    fileId:i.json.id||i.json.fileId,\n    fileName:i.json.name||'Unnamed file',\n    mimeType:i.json.mimeType||'',\n    size:i.json.size||0,\n    modifiedTime:i.json.modifiedTime||'',\n    category:classify(i.json.name,i.json.mimeType),\n    destinationRootFolderId:$('Organizer Settings').first().json.destinationRootFolderId,\n    dryRun:$('Organizer Settings').first().json.dryRun\n  }\n}));"
+      },
+      "id": "3393d408-bd61-448a-baf0-6433a4894404",
+      "name": "Classify Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{\n  ...$json,\n  destinationFolderName:$json.category\n}}];"
+      },
+      "id": "fce956f8-da64-4877-9403-7543946ec652",
+      "name": "Prepare Destination",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -864,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "dry",
+              "leftValue": "={{ $json.dryRun }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "748053ed-9d93-4090-bf73-90f85131c487",
+      "name": "Dry Run?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -640,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{...$json,status:'DRY_RUN',action:'WOULD_MOVE',message:`${$json.fileName} -> ${$json.destinationFolderName}`}}];"
+      },
+      "id": "a49968bb-61b9-4628-9740-6b726e991023",
+      "name": "Dry Run Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "search"
+      },
+      "id": "96aa58b0-ac61-431c-9e6f-14a86bbe2c78",
+      "name": "Find Destination Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -400,
+        896
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const source=$('Prepare Destination').item.json;\nconst matches=$input.all().map(i=>i.json).filter(x=>(x.name||'')===source.destinationFolderName && String(x.mimeType||'').includes('folder'));\nreturn [{json:{...source,destinationFolderId:matches[0]?.id||'',folderFound:!!matches[0]}}];"
+      },
+      "id": "ce2040c5-aa17-4eb8-b6b6-fb2ef05ccfe5",
+      "name": "Resolve Destination",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        896
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "exists",
+              "leftValue": "={{ $json.folderFound }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8ce1e10d-6476-4c86-81fc-49d5d5798411",
+      "name": "Destination Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        64,
+        896
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": "={{ $json.fileId }}",
+        "options": {}
+      },
+      "id": "9b27db0b-901f-4239-9611-a53fb8ec0911",
+      "name": "Move File",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        288,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{...$json,status:'MOVED',action:'MOVE',message:`${$json.fileName} moved to ${$json.destinationFolderName}`}}];"
+      },
+      "id": "dc354676-ab80-466c-ad24-2bbb8699fbb4",
+      "name": "Moved Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{...$json,status:'SKIPPED',action:'SKIP',message:`Destination folder '${$json.destinationFolderName}' was not found. Create it in Google Drive and run again.`}}];"
+      },
+      "id": "c98baca3-33cb-4e1b-b156-3a8464ba8c64",
+      "name": "Missing Folder Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows=$input.all().map(i=>i.json);\nconst report={success:true,generatedAt:new Date().toISOString(),totalProcessed:rows.length,moved:rows.filter(x=>x.status==='MOVED').length,skipped:rows.filter(x=>x.status==='SKIPPED').length,dryRun:rows.filter(x=>x.status==='DRY_RUN').length,byCategory:{}};\nfor(const r of rows) report.byCategory[r.category]=(report.byCategory[r.category]||0)+1;\nreturn [{json:{...report,details:rows}}];"
+      },
+      "id": "df20e392-f467-47a4-9fcc-e33c8a71beac",
+      "name": "Organization Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        816
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Organizer Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto Organizer Schedule": {
+      "main": [
+        [
+          {
+            "node": "Organizer Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Organizer Settings": {
+      "main": [
+        [
+          {
+            "node": "List Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Files": {
+      "main": [
+        [
+          {
+            "node": "Classify Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Files": {
+      "main": [
+        [
+          {
+            "node": "Prepare Destination",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Destination": {
+      "main": [
+        [
+          {
+            "node": "Dry Run?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dry Run?": {
+      "main": [
+        [
+          {
+            "node": "Dry Run Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find Destination Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dry Run Result": {
+      "main": [
+        [
+          {
+            "node": "Organization Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Destination Folder": {
+      "main": [
+        [
+          {
+            "node": "Resolve Destination",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Destination": {
+      "main": [
+        [
+          {
+            "node": "Destination Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Destination Exists?": {
+      "main": [
+        [
+          {
+            "node": "Move File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Missing Folder Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move File": {
+      "main": [
+        [
+          {
+            "node": "Moved Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Moved Result": {
+      "main": [
+        [
+          {
+            "node": "Organization Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Missing Folder Result": {
+      "main": [
+        [
+          {
+            "node": "Organization Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "08f1b668-1c7c-40cd-8988-cfbcd6023ab1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "coX5GzCmGdTGQNKd",
+  "tags": []
+}

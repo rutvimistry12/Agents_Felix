@@ -1,0 +1,158 @@
+{
+  "name": "AI Document Summarizer Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "documentText",
+              "name": "documentText",
+              "value": "Artificial Intelligence is transforming many industries by enabling computers to perform tasks that normally require human intelligence. Machine learning allows systems to learn patterns from data and make predictions. AI is used in healthcare, finance, education, transportation, and customer service. As AI adoption grows, organizations must also consider data privacy, security, transparency, and responsible use.",
+              "type": "string"
+            },
+            {
+              "id": "documentName",
+              "name": "documentName",
+              "value": "Sample AI Document",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bfccb687-8fde-4ab6-b4d6-6da6f3232f87",
+      "name": "Document Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI Document Summarizer Agent.\n\nAnalyze the following document and create a clear, accurate summary.\n\nDocument Name:\n{{ $json.documentName }}\n\nDocument Content:\n{{ $json.documentText }}\n\nReturn the result in the following structure:\n\nSummary:\nA concise summary of the document.\n\nKey Points:\n- Important point 1\n- Important point 2\n- Important point 3\n\nImportant Facts:\n- Important fact 1\n- Important fact 2\n\nAction Items:\n- Action item if mentioned\n\nKeywords:\nkeyword1, keyword2, keyword3\n\nSentiment:\nPositive / Neutral / Negative\n\nDo not invent information that is not present in the document.",
+        "options": {
+          "systemMessage": "You summarize documents accurately and concisely. Preserve important facts, numbers, dates, names, and conclusions. Never fabricate information."
+        }
+      },
+      "id": "595d63a3-7ae6-4380-a4f6-1260aff09a36",
+      "name": "AI Document Summarizer",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1280,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "id": "88c02437-e338-4ce1-ae51-6430d11963c0",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        560
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "1810d0bd-fde5-415c-b0c0-e1da1226b000",
+      "name": "Return Summary",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1840,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $json.output || $json.text || '';\n\nreturn [{\n  json: {\n    success: true,\n    documentName: $('Document Input').first().json.documentName,\n    summary: output,\n    generatedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "a9e6cb67-037b-4a0d-b1cd-71985590b4d8",
+      "name": "Format Summary1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        336
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Document Input": {
+      "main": [
+        [
+          {
+            "node": "AI Document Summarizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Document Summarizer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Document Summarizer": {
+      "main": [
+        [
+          {
+            "node": "Format Summary1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Summary1": {
+      "main": [
+        [
+          {
+            "node": "Return Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f766018f-fb7b-49a7-9e9e-fbe62d105ad3",
+  "meta": {
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "koPQryBzKbnFb46r",
+  "tags": []
+}

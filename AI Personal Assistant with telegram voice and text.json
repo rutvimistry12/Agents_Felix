@@ -1,0 +1,684 @@
+{
+  "name": "AI Personal Assistant with telegram voice and text",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -560,
+        -96
+      ],
+      "id": "6224f9d5-01c1-43be-9793-8ee7d175ea40",
+      "name": "Telegram Trigger",
+      "webhookId": "a9cfc497-aa88-42a2-ae37-1b7caa82d548",
+      "credentials": {
+        "telegramApi": {
+          "id": "hqEz4NKPWlwJDsOG",
+          "name": "televoicetextagent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ee6218c0-b79d-42cd-9d10-b82bb06cde5f",
+              "name": "Allow",
+              "value": "6424720049",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -336,
+        -96
+      ],
+      "id": "073568da-1fd4-414c-b2ca-1d5e8dd85aaf",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "853a1913-f272-48fe-9eff-e35a1b6bfbcc",
+              "leftValue": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+              "rightValue": "={{ $json.Allow }}",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -112,
+        -96
+      ],
+      "id": "4db6f391-8d25-4691-bdc1-b016c6ad35f7",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "82af0b66-7193-449f-b152-cac25a62f29a",
+              "name": "text",
+              "value": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "facb0df9-7f33-4d8b-b6ed-b7fa7e729869",
+              "name": "sessionId",
+              "value": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        128,
+        -112
+      ],
+      "id": "b720ec71-3fc1-40e3-a443-00180ffd8db8",
+      "name": "Voice or Text"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2bcf9536-d17c-4b99-9109-5bca4a3df3ca",
+              "leftValue": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        352,
+        -112
+      ],
+      "id": "7a9b29e5-03fc-496d-ac3b-88b49336fa11",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Trigger').item.json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        -384
+      ],
+      "id": "4bfab92d-5db1-40a6-8081-6615ef5dfd8d",
+      "name": "Get a file",
+      "webhookId": "47bec353-4138-40c8-83d4-4959a114af7c",
+      "credentials": {
+        "telegramApi": {
+          "id": "hqEz4NKPWlwJDsOG",
+          "name": "televoicetextagent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "speech",
+        "operation": "speechToText",
+        "additionalOptions": {},
+        "requestOptions": {}
+      },
+      "type": "@elevenlabs/n8n-nodes-elevenlabs.elevenLabs",
+      "typeVersion": 1,
+      "position": [
+        848,
+        -384
+      ],
+      "id": "3ed2d454-97d2-422f-a95b-61493611ac5d",
+      "name": "Transcribe audio or video",
+      "credentials": {
+        "elevenLabsApi": {
+          "id": "4PhNSebC5OCB6RFA",
+          "name": "ElevenLabs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "You are a personal AI assistant connected to Telegram.\n\nYour job is to understand the user's text or voice-transcribed message and perform the requested action using the available tools.\n\nYou can help with:\n\n1. TASK MANAGEMENT\n\n* Create tasks in Notion.\n* Update existing tasks.\n* Mark tasks as completed.\n* Delete tasks when requested.\n* Read pending or completed tasks.\n* Set task title, description, priority, due date and status when available.\n\n2. CALENDAR MANAGEMENT\n\n* Create calendar events.\n* Find existing events.\n* Update event date, time, title, attendees or description.\n* Cancel/delete events.\n* Check the user's schedule.\n* Understand natural language dates and times such as:\n  \"tomorrow at 3 PM\"\n  \"next Monday at 10\"\n  \"this Friday evening\"\n  \"in two hours\"\n  \"at 5 PM today\".\n\n3. EMAIL\n\n* Send emails when the user explicitly asks you to send one.\n* Draft emails when the user asks for a draft.\n* Read/search emails when the appropriate email tool is available.\n* Extract recipient, subject and message from natural language.\n* Do not invent an email address if it is not available.\n* If important information is missing, ask the user for it.\n\n4. GENERAL ASSISTANCE\n\n* Answer normal questions.\n* Help organize the user's tasks, meetings and schedule.\n* Provide concise confirmations after completing an action.\n\nIMPORTANT RULES:\n\n* Understand both normal text and voice-transcribed text.\n* Treat voice transcription as normal user input.\n* Do not require the user to use a specific command format.\n* Understand natural conversational language.\n\nDATE AND TIME:\n\n* Always determine the exact date and time before creating a calendar event or time-sensitive task.\n* Interpret relative dates using the current date and time available to you.\n* Use the user's configured timezone.\n* If the date or time is ambiguous, ask a clarification question instead of guessing.\n* Never silently change the user's requested time.\n\nCALENDAR:\nWhen creating an event, identify:\n\n* Event title\n* Date\n* Start time\n* End time or duration\n* Attendees, if provided\n* Location, if provided\n* Description, if provided\n\nIf the user says something like:\n\"Fix a meeting with Rahul tomorrow at 4 PM for 30 minutes\"\n\nCreate:\nTitle: Meeting with Rahul\nDate: tomorrow's exact date\nStart: 4:00 PM\nDuration: 30 minutes\n\nIf duration is not provided, use the calendar's default event duration if available, otherwise ask the user.\n\nTASKS:\nWhen creating a task, identify:\n\n* Task title\n* Due date/time if provided\n* Priority if provided\n* Description if provided\n* Status\n\nIf the user says:\n\"Create a task in Notion to complete my Python project by Friday\"\n\nCreate a Notion task with:\nTitle: Complete Python project\nDue date: Friday\nStatus: Not Started\n\nEMAIL:\nWhen the user asks to send an email:\n\n* Identify recipient\n* Subject\n* Email body\n* Attachments if explicitly requested and available\n\nIf the user says:\n\"Email Rahul that tomorrow's meeting is cancelled\"\n\nCreate an email with an appropriate subject and message.\n\nDo not send an email if the recipient cannot be identified.\n\nCONFIRMATION:\nAfter successfully completing an action, give a short confirmation.\n\nExamples:\n\"Done — I created the Notion task.\"\n\"Done — I scheduled the meeting for tomorrow at 4:00 PM.\"\n\"Done — I sent the email to Rahul.\"\n\nIf an action fails, clearly explain what went wrong and do not claim that it was completed.\n\nSAFETY:\n\n* Never claim an action was completed unless the connected tool actually completed it.\n* Never invent calendar events, tasks, contacts, email addresses or tool results.\n* Ask for missing information when it is required.\n* For destructive actions such as deleting tasks, cancelling events or deleting data, make sure the user's request is clear before executing.\n* Keep responses concise and natural because the user is interacting through Telegram.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1264,
+        -176
+      ],
+      "id": "1d76f7b5-d7cf-4571-beb2-77c7ea212c90",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        432,
+        368
+      ],
+      "id": "26c04718-d526-4429-9343-fcf6813dff1e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lnYFfhqKYm4FH0mI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "ai_session_default",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        736,
+        368
+      ],
+      "id": "b6722559-8d5f-44d3-baa9-336cba769c11",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "familyName": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Family_Name', ``, 'string') }}",
+        "givenName": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Given_Name', ``, 'string') }}",
+        "additionalFields": {
+          "phoneUi": {
+            "phoneValues": [
+              {
+                "type": "mobile",
+                "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('phoneValues0_Value', ``, 'string') }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleContactsTool",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        368
+      ],
+      "id": "a729d502-8592-44ee-9b55-2a246fb8f496",
+      "name": "Create a contact in Google Contacts",
+      "credentials": {
+        "googleContactsOAuth2Api": {
+          "id": "qCrzbHJHc1iyZgdb",
+          "name": "Google Contacts account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Create a database page in Notion.\nUse this tool wehn the user wants to add,create n,schedule remember or plan a task.",
+        "authentication": "oAuth2",
+        "resource": "databasePage",
+        "dataSourceId": {
+          "__rl": true,
+          "value": "3e112ecd-2414-80b7-8502-000b016c8578",
+          "mode": "list",
+          "cachedResultName": "Task Database ",
+          "cachedResultUrl": "https://app.notion.com/p/3e112ecd241480f5a4ccc1447315a703"
+        },
+        "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Title', ``, 'string') }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Date|date",
+              "range": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('propertyValues0_Range', ``, 'boolean') }}"
+            },
+            {
+              "key": "Priority|rich_text",
+              "textContent": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('propertyValues1_Text', ``, 'string') }}"
+            },
+            {
+              "key": "Status|status",
+              "statusValue": "Not started"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notionTool",
+      "typeVersion": 3,
+      "position": [
+        1424,
+        352
+      ],
+      "id": "82eac99c-3598-4cce-8550-91e10f9930b9",
+      "name": "Create a database page in Notion",
+      "credentials": {
+        "notionOAuth2Api": {
+          "id": "Ohhbo3iDtH82KBpf",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "databasePage",
+        "operation": "getAll",
+        "dataSourceId": {
+          "__rl": true,
+          "value": "3e112ecd-2414-80b7-8502-000b016c8578",
+          "mode": "list",
+          "cachedResultName": "Task Database ",
+          "cachedResultUrl": "https://app.notion.com/p/3e112ecd241480f5a4ccc1447315a703"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notionTool",
+      "typeVersion": 3,
+      "position": [
+        1632,
+        352
+      ],
+      "id": "10f4b76e-dd4d-4916-88e6-79de671f61ea",
+      "name": "Get many database pages in Notion",
+      "credentials": {
+        "notionOAuth2Api": {
+          "id": "Ohhbo3iDtH82KBpf",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Retrieve emails from Gmail.\n\nUse when the user asks:\n- Show my emails\n- Summarize emails\n- Check inbox\n- Any important emails?\n- What emalls arrived today?\n\nIgnore promotional, spam, marketing, and newsletter emails unless specifically requested.\n\n",
+        "operation": "getAll",
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        352
+      ],
+      "id": "ee45ee02-290c-4caf-b0c4-07183dea372c",
+      "name": "Get many messages in Gmail",
+      "webhookId": "79724b4e-5213-4bd4-968a-95a14a3cc4b9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XvqeA5UsjNVvSIqO",
+          "name": "Gmail account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Send an email.\n\nUse when the user wants to:\n- Send an email\n- Compose an email\n- Reply to someone\n- Email a contact",
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1952,
+        352
+      ],
+      "id": "0c11d6e7-40a7-4682-9d28-9333000cc655",
+      "name": "Send a message in Gmail",
+      "webhookId": "6f152314-79b3-4d1e-b09c-d6a0c0f81fec",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XvqeA5UsjNVvSIqO",
+          "name": "Gmail account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "rutusuthar6@gmail.com",
+          "mode": "list",
+          "cachedResultName": "rutusuthar6@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        2128,
+        336
+      ],
+      "id": "3d4ec69a-7609-4631-94c3-cc7171ba0fd0",
+      "name": "Create an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "1nR5fcMx5uTsEdyY",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Retrieve calendar events.\n\nUse this tool when the user asks:\n- What meetings po I have today?\n- What's on my schedule?\n- Show today's events\n- What events do I have tomorrow?\n- What is on my calendar this week?",
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "rutusuthar6@gmail.com",
+          "mode": "list",
+          "cachedResultName": "rutusuthar6@gmail.com"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        2336,
+        336
+      ],
+      "id": "f8132954-e74b-4316-b82b-e8e38f7a5224",
+      "name": "Get many events in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "1nR5fcMx5uTsEdyY",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=Added this task {{ $('Telegram Trigger').item.json.message.text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        -176
+      ],
+      "id": "47c85151-732a-4571-966c-9e5471482279",
+      "name": "Send a text message",
+      "webhookId": "d00a18db-444c-40d5-9bc9-554ecc924f0c",
+      "credentials": {
+        "telegramApi": {
+          "id": "hqEz4NKPWlwJDsOG",
+          "name": "televoicetextagent"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Voice or Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Voice or Text": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Transcribe audio or video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe audio or video": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a contact in Google Contacts": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a database page in Notion": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many database pages in Notion": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e9d0ec15-ef17-4857-8b64-8447884a90de",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "suAwkOYY6U7nzKP8",
+  "tags": []
+}
