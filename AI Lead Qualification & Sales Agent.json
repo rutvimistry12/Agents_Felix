@@ -1,0 +1,717 @@
+{
+  "name": "AI Lead Qualification & Sales Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-qualification",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -432,
+        -32
+      ],
+      "id": "d1abfca9-a2c8-45e7-9709-85f061a3f953",
+      "name": "Webhook",
+      "webhookId": "6f3b0e51-94f6-4417-af51-6084a4bed253"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a92a229a-4e23-4ebd-9faf-d0976496368c",
+              "name": "name",
+              "value": "={{$json.body.name}}",
+              "type": "string"
+            },
+            {
+              "id": "82d0df23-05fa-40e8-b0e2-1811963fd4aa",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "dafa94ef-3289-44e5-9855-c9406788c9c7",
+              "name": "company",
+              "value": "={{ $json.body.company }}",
+              "type": "string"
+            },
+            {
+              "id": "46452ae4-de17-44ef-a79b-e64c50233199",
+              "name": "jobTitle",
+              "value": "={{ $json.body.jobTitle }}",
+              "type": "string"
+            },
+            {
+              "id": "dabf8bc6-8d24-428d-b1f2-928fedc1766f",
+              "name": "interest",
+              "value": "={{ $json.body.interest }}",
+              "type": "string"
+            },
+            {
+              "id": "9355a437-2ecf-4481-b43d-b9c83575d7a0",
+              "name": "budget",
+              "value": "={{ $json.body.budget }}",
+              "type": "string"
+            },
+            {
+              "id": "01c7a9fb-c9e5-4968-b2aa-8d2d5098784f",
+              "name": "timeline",
+              "value": "={{ $json.body.timeline }}",
+              "type": "string"
+            },
+            {
+              "id": "9c226829-77df-4f6a-b9b9-19de204d2b87",
+              "name": "company_size",
+              "value": "={{ $json.body.companySize }}",
+              "type": "string"
+            },
+            {
+              "id": "3b4d3e20-4f8e-4c96-b9be-86b95529727a",
+              "name": "body.requirements",
+              "value": "={{ $json.body.requirements }}",
+              "type": "string"
+            },
+            {
+              "id": "3e8b8d37-592f-4ef2-b1f3-4f66c1f94b7f",
+              "name": "body.message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -208,
+        -32
+      ],
+      "id": "8b3e3bea-e866-42d0-840d-fbbceddc8bba",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this lead:\n\nName: {{$json.name}}\nEmail: {{$json.email}}\nCompany: {{$json.company}}\nJob Title: {{$json.jobTitle}}\nInterest: {{$json.interest}}\nBudget: {{$json.budget}}\nTimeline: {{$json.timeline}}\nCompany Size: {{$json.company_size}}\nRequirements: {{ $json.body.requirements }}\nMessage: {{ $json.body.message }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an AI Lead Qualification and Sales Agent.\n\nYour job is to analyze incoming sales leads and determine how qualified they are.\n\nAnalyze:\n\n1. Lead information\n2. Product/service interest\n3. Budget\n4. Buying timeline\n5. Job role\n6. Company size\n7. Requirements\n8. Buying intent\n9. Pain points\n10. Missing information\n\nClassify the lead as:\n\nHOT = strong buying intent, suitable budget, clear requirement and near-term timeline.\n\nWARM = potential customer but some qualification information or buying commitment is missing.\n\nCOLD = low buying intent, unclear requirement, no budget, or very distant timeline.\n\nDo not invent information that is not provided.\n\nReturn ONLY valid JSON.\n\nUse exactly this structure:\n\n{\n  \"leadName\": \"\",\n  \"email\": \"\",\n  \"company\": \"\",\n  \"jobTitle\": \"\",\n  \"interest\": \"\",\n  \"budget\": \"\",\n  \"timeline\": \"\",\n  \"leadScore\": 0,\n  \"leadCategory\": \"\",\n  \"buyingIntent\": \"\",\n  \"qualification\": \"\",\n  \"keyRequirements\": [],\n  \"painPoints\": [],\n  \"missingInformation\": [],\n  \"recommendedAction\": \"\",\n  \"salesMessage\": \"\"\n}\n\nleadScore must be between 0 and 100.\n\nleadCategory must be exactly one of:\nHOT\nWARM\nCOLD\n\nbuyingIntent must be:\nHigh\nMedium\nLow\n\nqualification must be:\nQualified\nPartially Qualified\nNot Qualified\n\nThe salesMessage should be a short, professional personalized sales follow-up message."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        16,
+        -32
+      ],
+      "id": "ee9583ba-8fac-427e-921d-4bac31863606",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -128,
+        176
+      ],
+      "id": "7a49f46c-401e-425d-bf4d-1e088fcace96",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "edJAzo9yaNKu0gXa",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"leadName\": \"Rahul Sharma\",\n  \"email\": \"rahul@example.com\",\n  \"company\": \"ABC Technologies\",\n  \"jobTitle\": \"Founder\",\n  \"interest\": \"AI Automation\",\n  \"budget\": \"100000\",\n  \"timeline\": \"Within 1 month\",\n  \"leadScore\": 92,\n  \"leadCategory\": \"HOT\",\n  \"buyingIntent\": \"High\",\n  \"qualification\": \"Qualified\",\n  \"keyRequirements\": [\n    \"AI chatbot\",\n    \"CRM automation\"\n  ],\n  \"painPoints\": [\n    \"Manual lead management\"\n  ],\n  \"missingInformation\": [\n    \"Decision-making authority\"\n  ],\n  \"recommendedAction\": \"Schedule a sales demo within 24 hours\",\n  \"salesMessage\": \"Hi Rahul, thank you for your interest in AI automation.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        176
+      ],
+      "id": "7ab1f303-cab1-49e6-a752-c3ea45818823",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.output ?? $json;\n\nlet data;\n\nif (typeof raw === 'string') {\n  try {\n    data = JSON.parse(raw);\n  } catch (error) {\n    throw new Error('AI output is not valid JSON: ' + raw);\n  }\n} else {\n  data = raw;\n}\n\nconst score = Math.max(\n  0,\n  Math.min(100, Number(data.leadScore ?? 0))\n);\n\nlet category;\n\nif (score >= 80) {\n  category = \"HOT\";\n} else if (score >= 50) {\n  category = \"WARM\";\n} else {\n  category = \"COLD\";\n}\n\nreturn [\n  {\n    json: {\n      ...data,\n      leadScore: score,\n      leadCategory: category\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        -32
+      ],
+      "id": "94e80c64-d836-45c1-9891-eeddf78e0b9f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.leadCategory}}",
+                    "rightValue": "HOT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e2fab41f-c71d-4d3c-8e6c-6e9f87c5abb8"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "91c520c1-8c97-492b-8125-7577a8ee1c8c",
+                    "leftValue": "={{$json.leadCategory}}",
+                    "rightValue": "WARM",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b1803762-12ab-485a-9b42-c706e10bdcbf",
+                    "leftValue": "={{$json.leadCategory}}",
+                    "rightValue": "COLD",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        -32
+      ],
+      "id": "62144621-b999-40fd-b176-f440c6a261e2",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=🔥 HOT LEAD ALERT  Name: {{$json.leadName}} Company: {{$json.company}} Interest: {{$json.interest}}  Lead Score: {{$json.leadScore}}/100 Buying Intent: {{$json.buyingIntent}}  Budget: {{$json.budget}} Timeline: {{$json.timeline}}  Recommended Action: {{$json.recommendedAction}}  Sales Message: {{$json.salesMessage}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        832,
+        -128
+      ],
+      "id": "ddda8053-f5c7-4843-9057-c05a03f3736f",
+      "name": "Send a text message",
+      "webhookId": "70bc22ab-c830-4b93-8d7b-4ed24eff655d",
+      "credentials": {
+        "telegramApi": {
+          "id": "gE8oIDM83A08d9M2",
+          "name": "aicyber"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "=6424720049",
+        "text": "=🟡 WARM LEAD  Name: {{$json.leadName}} Company: {{$json.company}}  Lead Score: {{$json.leadScore}}/100 Buying Intent: {{$json.buyingIntent}}  Missing Information: {{$json.missingInformation}}  Recommended Action: {{$json.recommendedAction}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        992,
+        16
+      ],
+      "id": "c7b627d1-6892-45db-a81a-e073f3c06a07",
+      "name": "Send a text message1",
+      "webhookId": "593c272a-013a-4f6e-b30c-df7a92390725",
+      "credentials": {
+        "telegramApi": {
+          "id": "gE8oIDM83A08d9M2",
+          "name": "aicyber"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=🔵 COLD LEAD  Name:  {{ $json.output.leadName }}Company: {{ $json.output.company }} Lead Score: {{$json.leadScore}}/100  Recommended Action: {{ $json.output.recommendedAction }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        912,
+        224
+      ],
+      "id": "0543196d-7939-4ab8-a885-bbf1f49dc13d",
+      "name": "Send a text message2",
+      "webhookId": "2a9f5761-feee-41f3-82a0-c6a6d94c7711",
+      "credentials": {
+        "telegramApi": {
+          "id": "gE8oIDM83A08d9M2",
+          "name": "aicyber"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1t_F5RlvcqzUmjm_B1_5IxAKR8qAaildoYjb45a6rQQY",
+          "mode": "list",
+          "cachedResultName": "AI Lead Qualification & Sales",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1t_F5RlvcqzUmjm_B1_5IxAKR8qAaildoYjb45a6rQQY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1t_F5RlvcqzUmjm_B1_5IxAKR8qAaildoYjb45a6rQQY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Lead ID": "=LEAD{{$now.toMillis()}}",
+            "Lead Name": "={{ $('Code in JavaScript').item.json.leadName }}",
+            "Email": "={{ $('Code in JavaScript').item.json.email }}",
+            "Phone": "=",
+            "Company": "={{ $('Code in JavaScript').item.json.company }}",
+            "Job Title": "={{ $('Code in JavaScript').item.json.jobTitle }}",
+            "Interest": "={{ $('Code in JavaScript').item.json.interest }}",
+            "Budget": "={{ $('Code in JavaScript').item.json.budget }}",
+            "Timeline": "={{ $('Code in JavaScript').item.json.timeline }}",
+            "Company Size": "={{ $('Edit Fields').item.json.company_size }}",
+            "Requirements": "={{ $('Edit Fields').item.json.body.requirements }}",
+            "Message": "={{ $('Code in JavaScript').item.json.salesMessage }}",
+            "Lead Score": "={{ $('Code in JavaScript').item.json.leadScore }}",
+            "Lead Category": "={{ $('Code in JavaScript').item.json.leadCategory }}",
+            "Buying Intent": "={{ $('Code in JavaScript').item.json.buyingIntent }}",
+            "Qualification": "={{ $('Code in JavaScript').item.json.qualification }}",
+            "Key Requirements": "={{ $('Code in JavaScript').item.json.keyRequirements }}",
+            "Pain Points": "={{ $('Code in JavaScript').item.json.painPoints }}",
+            "Missing Information": "={{ $('Code in JavaScript').item.json.missingInformation }}",
+            "Recommended Action": "={{ $('Code in JavaScript').item.json.recommendedAction }}",
+            "Sales Message": "={{ $('Code in JavaScript').item.json.salesMessage }}",
+            "Created At": "={{$now}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Lead ID",
+              "displayName": "Lead ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lead Name",
+              "displayName": "Lead Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Title",
+              "displayName": "Job Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Interest",
+              "displayName": "Interest",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Timeline",
+              "displayName": "Timeline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company Size",
+              "displayName": "Company Size",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Requirements",
+              "displayName": "Requirements",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lead Score",
+              "displayName": "Lead Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lead Category",
+              "displayName": "Lead Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Buying Intent",
+              "displayName": "Buying Intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Qualification",
+              "displayName": "Qualification",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Key Requirements",
+              "displayName": "Key Requirements",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Pain Points",
+              "displayName": "Pain Points",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Missing Information",
+              "displayName": "Missing Information",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Recommended Action",
+              "displayName": "Recommended Action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sales Message",
+              "displayName": "Sales Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Created At",
+              "displayName": "Created At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1392,
+        48
+      ],
+      "id": "43e3a4e1-b2bf-4e0d-b0e2-22a3fbac1b4e",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message2": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d115b70f-347c-4455-af5c-c33d31ea8ff5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "GPSdzR6peGDYqY1s",
+  "tags": []
+}
