@@ -1,0 +1,687 @@
+{
+  "name": "AI Invoice & Payment Follow-Up Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        -48
+      ],
+      "id": "03a83b46-43c4-4ae7-b540-02747f299fd6",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f4c142b6-9cb1-4e8a-813c-5de27e2ba52c",
+              "name": "invoiceId",
+              "value": "INV-1001",
+              "type": "string"
+            },
+            {
+              "id": "a5afa8cb-9581-45fe-9cc2-ca630f216b0a",
+              "name": "customerName",
+              "value": "Rahul Sharma",
+              "type": "string"
+            },
+            {
+              "id": "4fb267ec-6e36-4754-bc66-3e5e097bd818",
+              "name": "customerEmail",
+              "value": "rahul@example.com",
+              "type": "string"
+            },
+            {
+              "id": "9797fb4b-8a8a-4db4-a1d4-718a1eb07ada",
+              "name": "company",
+              "value": "ABC Technologies",
+              "type": "string"
+            },
+            {
+              "id": "e0e95728-3b13-48b5-b3ea-f33c997503ce",
+              "name": "invoiceAmount",
+              "value": "75000",
+              "type": "string"
+            },
+            {
+              "id": "2a3df94b-7f7b-4eec-a61f-19b914aefc97",
+              "name": "invoiceDate",
+              "value": "2026-09-01",
+              "type": "string"
+            },
+            {
+              "id": "075cd549-3354-4778-a545-07ef8ca008a6",
+              "name": "dueDate",
+              "value": "2026-09-21",
+              "type": "string"
+            },
+            {
+              "id": "d5b42207-f7fe-4f09-9a9e-4fc5f5eedeff",
+              "name": "paymentStatus",
+              "value": "Unpaid",
+              "type": "string"
+            },
+            {
+              "id": "946208d6-0fd1-448d-b1c4-779ca5bb3d71",
+              "name": "paymentMethod",
+              "value": "Bank Transfer",
+              "type": "string"
+            },
+            {
+              "id": "4f552bf9-f9ef-49c4-b834-4e069f9231a5",
+              "name": "description",
+              "value": "AI Automation Development",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -320,
+        -48
+      ],
+      "id": "211eaecb-54e2-4299-b043-6ba090035563",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this invoice and payment information.\n\nInvoice ID: {{$json.invoiceId}}\nCustomer Name: {{$json.customerName}}\nCustomer Email: {{$json.customerEmail}}\nCompany: {{$json.company}}\nInvoice Amount: {{$json.invoiceAmount}}\nInvoice Date: {{$json.invoiceDate}}\nDue Date: {{$json.dueDate}}\nPayment Status: {{$json.paymentStatus}}\nPayment Method: {{$json.paymentMethod}}\nDescription: {{$json.description}}\n\nDetermine:\n\n1. Payment status\n2. Whether the invoice is overdue\n3. Days overdue\n4. Payment urgency\n5. Recommended action\n6. A professional payment follow-up message\n\nDo not invent information.\n\nReturn ONLY valid JSON.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an AI Invoice and Payment Follow-Up Agent.\n\nYour job is to analyze invoices and determine their payment status.\n\nClassify paymentStatus as exactly one of:\n\nPAID\nOVERDUE\nDUE_SOON\nNOT_DUE\n\nRules:\n\nPAID:\nThe invoice has already been paid.\n\nOVERDUE:\nThe invoice is unpaid and the due date has passed.\n\nDUE_SOON:\nThe invoice is unpaid and the due date is approaching within 7 days.\n\nNOT_DUE:\nThe invoice is unpaid but the due date is more than 7 days away.\n\nDetermine urgency as exactly one of:\n\nHigh\nMedium\nLow\n\nHigh:\nInvoice is overdue.\n\nMedium:\nInvoice is due within 7 days.\n\nLow:\nInvoice is not due yet or already paid.\n\ndaysOverdue must be 0 when the invoice is not overdue.\n\nGenerate a short, professional payment follow-up message.\n\nDo not invent payment information.\n\nReturn only valid JSON using exactly this structure:\n\n{\n  \"invoiceId\": \"\",\n  \"customerName\": \"\",\n  \"customerEmail\": \"\",\n  \"company\": \"\",\n  \"invoiceAmount\": 0,\n  \"dueDate\": \"\",\n  \"paymentStatus\": \"\",\n  \"daysOverdue\": 0,\n  \"urgency\": \"\",\n  \"recommendedAction\": \"\",\n  \"followUpMessage\": \"\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -96,
+        -48
+      ],
+      "id": "1912e7d1-0783-4c09-8e3e-e675c1f21504",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -188,
+        160
+      ],
+      "id": "b0dbac3c-0e43-46ae-aac7-e904e599812f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "edJAzo9yaNKu0gXa",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"invoiceId\": \"INV-1001\",\n  \"customerName\": \"Rahul Sharma\",\n  \"customerEmail\": \"rahul@example.com\",\n  \"company\": \"ABC Technologies\",\n  \"invoiceAmount\": 75000,\n  \"dueDate\": \"2026-09-15\",\n  \"paymentStatus\": \"OVERDUE\",\n  \"daysOverdue\": 6,\n  \"urgency\": \"High\",\n  \"recommendedAction\": \"Send an immediate payment reminder and request payment confirmation.\",\n  \"followUpMessage\": \"Dear Rahul, this is a friendly reminder that invoice INV-1001 for ₹75,000 is overdue. Please arrange payment at your earliest convenience.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        160
+      ],
+      "id": "713054dd-bf15-4c03-a4de-66b2a23f84df",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.output ?? $json;\n\nlet data;\n\nif (typeof raw === \"string\") {\n  try {\n    data = JSON.parse(raw);\n  } catch (error) {\n    throw new Error(\"AI output is not valid JSON: \" + raw);\n  }\n} else {\n  data = raw;\n}\n\n// Get original invoice information\nconst dueDate = String(data.dueDate || \"\").trim();\nconst originalStatus = String(data.paymentStatus || \"\").toUpperCase();\n\n// Today's date\nconst today = new Date();\ntoday.setHours(0, 0, 0, 0);\n\n// Due date\nconst due = new Date(dueDate + \"T00:00:00\");\ndue.setHours(0, 0, 0, 0);\n\n// Calculate days difference\nconst differenceMs = due.getTime() - today.getTime();\nconst daysUntilDue = Math.ceil(differenceMs / (1000 * 60 * 60 * 24));\n\nlet paymentStatus;\nlet daysOverdue;\nlet urgency;\n\n// If already paid\nif (originalStatus === \"PAID\") {\n  paymentStatus = \"PAID\";\n  daysOverdue = 0;\n  urgency = \"Low\";\n}\n\n// If due date has passed\nelse if (daysUntilDue < 0) {\n  paymentStatus = \"OVERDUE\";\n  daysOverdue = Math.abs(daysUntilDue);\n  urgency = \"High\";\n}\n\n// If due today or within next 7 days\nelse if (daysUntilDue <= 7) {\n  paymentStatus = \"DUE_SOON\";\n  daysOverdue = 0;\n  urgency = \"Medium\";\n}\n\n// More than 7 days remaining\nelse {\n  paymentStatus = \"NOT_DUE\";\n  daysOverdue = 0;\n  urgency = \"Low\";\n}\n\nreturn [\n  {\n    json: {\n      ...data,\n      paymentStatus,\n      daysOverdue,\n      urgency,\n      daysUntilDue\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -48
+      ],
+      "id": "737e2a97-312e-469d-b2a3-84cff55fd59c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.paymentStatus}}",
+                    "rightValue": "=OVERDUE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "1e8be0d3-b4fa-4201-a266-bfcd5a64c959"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3241bab7-c2a6-40ec-92f5-c811a6dd1c70",
+                    "leftValue": "={{$json.paymentStatus}}",
+                    "rightValue": "=DUE_SOON",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2cf9a620-5691-4894-aa73-05050694d9b1",
+                    "leftValue": "={{$json.paymentStatus}}",
+                    "rightValue": "=PAID",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "afdb7016-6ddf-4371-a1e2-de4deeff7b62",
+                    "leftValue": "={{$json.paymentStatus}}",
+                    "rightValue": "NOT_DUE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        496,
+        -48
+      ],
+      "id": "44776968-436c-415f-81db-0b6e90c23744",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=🚨 OVERDUE INVOICE  Invoice: {{$json.invoiceId}}  Customer: {{$json.customerName}} Company: {{$json.company}}  Amount: ₹{{$json.invoiceAmount}} Due Date: {{$json.dueDate}}  Days Overdue: {{$json.daysOverdue}} Urgency: {{$json.urgency}}  Recommended Action: {{$json.recommendedAction}}  Follow-up Message: {{$json.followUpMessage}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        -245.5
+      ],
+      "id": "0d21985d-b60e-4ff7-a19a-e94cf18cad53",
+      "name": "Send a text message",
+      "webhookId": "fdfd2165-20e5-4029-a353-fd0713cef151",
+      "credentials": {
+        "telegramApi": {
+          "id": "gE8oIDM83A08d9M2",
+          "name": "aicyber"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=🟡 PAYMENT DUE SOON  Invoice: {{$json.invoiceId}}  Customer: {{$json.customerName}} Company: {{$json.company}}  Amount: ₹{{$json.invoiceAmount}} Due Date: {{$json.dueDate}}  Urgency: {{$json.urgency}}  Recommended Action: {{$json.recommendedAction}}  Follow-up Message: {{$json.followUpMessage}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        -96
+      ],
+      "id": "0fec3135-dbcd-47cd-9fd5-6aacd5e4913d",
+      "name": "Send a text message1",
+      "webhookId": "82c64d93-4ec6-40cb-90d2-f972f3913ae6",
+      "credentials": {
+        "telegramApi": {
+          "id": "gE8oIDM83A08d9M2",
+          "name": "aicyber"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=✅ PAYMENT RECEIVED  Invoice: {{$json.invoiceId}}  Customer: {{$json.customerName}} Company: {{$json.company}}  Amount: ₹{{$json.invoiceAmount}}  Payment Status: PAID  No payment follow-up is required.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        48
+      ],
+      "id": "90d10fd7-6c99-4e54-8f15-5e9de8e8bb54",
+      "name": "Send a text message2",
+      "webhookId": "49bbc149-7d93-426f-8efa-5d4dc563c863",
+      "credentials": {
+        "telegramApi": {
+          "id": "gE8oIDM83A08d9M2",
+          "name": "aicyber"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=🔵 INVOICE NOT DUE  Invoice: {{$json.invoiceId}}  Customer: {{$json.customerName}} Company: {{$json.company}}  Amount: ₹{{$json.invoiceAmount}} Due Date: {{$json.dueDate}}  Payment Status: NOT_DUE  No immediate payment reminder is required.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        736,
+        288
+      ],
+      "id": "a1a90724-edfe-4445-90bf-925100b56ccf",
+      "name": "Send a text message3",
+      "webhookId": "ea889baa-0852-4031-ab36-d705e9e7a74a",
+      "credentials": {
+        "telegramApi": {
+          "id": "gE8oIDM83A08d9M2",
+          "name": "aicyber"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1LFcuaWSuy8w9uS0-B7H7V0fzXAT30zn6rTdgcD3NGyY",
+          "mode": "list",
+          "cachedResultName": "Invoice Payment Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1LFcuaWSuy8w9uS0-B7H7V0fzXAT30zn6rTdgcD3NGyY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1LFcuaWSuy8w9uS0-B7H7V0fzXAT30zn6rTdgcD3NGyY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Invoice ID": "={{ $('Code in JavaScript').item.json.invoiceId }}",
+            "Customer Name": "={{ $('Code in JavaScript').item.json.customerName }}",
+            "Customer Email": "={{ $('Code in JavaScript').item.json.customerEmail }}",
+            "Company": "={{ $('Code in JavaScript').item.json.company }}",
+            "Invoice Amount": "={{ $('Code in JavaScript').item.json.invoiceAmount }}",
+            "Due Date": "={{ $('Code in JavaScript').item.json.dueDate }}",
+            "Payment Status": "={{ $('Code in JavaScript').item.json.paymentStatus }}",
+            "Days Overdue": "={{ $('Code in JavaScript').item.json.daysOverdue }}",
+            "Urgency": "={{ $('Code in JavaScript').item.json.urgency }}",
+            "Recommended Action": "={{ $('Code in JavaScript').item.json.recommendedAction }}",
+            "Follow-Up Message": "={{ $('Code in JavaScript').item.json.followUpMessage }}",
+            "Created At": "={{$now}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Invoice ID",
+              "displayName": "Invoice ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer Email",
+              "displayName": "Customer Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Invoice Amount",
+              "displayName": "Invoice Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Due Date",
+              "displayName": "Due Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Payment Status",
+              "displayName": "Payment Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Days Overdue",
+              "displayName": "Days Overdue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Urgency",
+              "displayName": "Urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Recommended Action",
+              "displayName": "Recommended Action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Follow-Up Message",
+              "displayName": "Follow-Up Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Created At",
+              "displayName": "Created At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1360,
+        -80
+      ],
+      "id": "0d0c838e-7064-455b-b831-81016031bcb0",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message3": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message2": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "89aa1a39-3c38-44ab-b8eb-bdef73b09414",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "LeSxJcZQlqXb6Bkd",
+  "tags": []
+}
