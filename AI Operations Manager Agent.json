@@ -1,0 +1,428 @@
+{
+  "name": "AI Operations Manager Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8fda7278-fde8-45f9-b864-5b3be0ffbbc2",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ms8-QJcMrKj5L-sBBLs1uEUpER0DF3LoG676YjhmP7g",
+          "mode": "list",
+          "cachedResultName": "AI Operations Manager",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ms8-QJcMrKj5L-sBBLs1uEUpER0DF3LoG676YjhmP7g/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ms8-QJcMrKj5L-sBBLs1uEUpER0DF3LoG676YjhmP7g/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "41c35764-aa4c-4d40-8277-70ec845f658b",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TzyMwGUjzcIbVlAP",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all();\n\nreturn data.map(item => {\n  const d = item.json;\n\n  return {\n    json: {\n      operationId: d.operation_id || \"N/A\",\n      operationName: d.operation_name || \"Unknown\",\n      department: d.department || \"Unknown\",\n      owner: d.owner || \"Unassigned\",\n      status: d.status || \"Unknown\",\n\n      taskCount: Number(d.task_count || 0),\n      completedTasks: Number(d.completed_tasks || 0),\n      pendingTasks: Number(d.pending_tasks || 0),\n      failedTasks: Number(d.failed_tasks || 0),\n\n      deadline: d.deadline || \"N/A\",\n      errorMessage: d.error_message || \"\",\n      uptime: Number(d.uptime || 0),\n      customerIssues: Number(d.customer_issues || 0),\n\n      lastUpdated: d.last_updated || \"\"\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "f7bd0b3e-35f8-4a56-813f-28b615293864",
+      "name": "Normalize the data"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this operational data:\n\n{{ JSON.stringify($json) }}",
+        "options": {
+          "systemMessage": "You are an AI Operations Manager.\n\nYour job is to monitor business and technical operations and identify operational risks, failures, delays, bottlenecks and tasks requiring attention.\n\nAnalyze the provided operational data.\n\nFor every operation:\n\n1. Determine the operational status.\n2. Identify problems.\n3. Determine risk level.\n4. Determine priority.\n5. Estimate business impact.\n6. Identify the likely cause when there is enough evidence.\n7. Recommend practical next actions.\n8. Determine whether escalation is required.\n9. Identify the responsible owner.\n10. Suggest a reasonable deadline.\n\nRisk levels:\n\nLOW:\nNo significant operational problem.\n\nMEDIUM:\nA problem exists but normal operations can continue.\n\nHIGH:\nThe problem may significantly affect operations and requires prompt action.\n\nCRITICAL:\nThe problem is actively disrupting an important operation or requires immediate escalation.\n\nPriority:\n\nP4 = Low\nP3 = Medium\nP2 = High\nP1 = Critical\n\nDo not invent information that is not present in the input.\n\nReturn ONLY valid JSON.\n\nRequired structure:\n\n{\n  \"operationId\": \"\",\n  \"operationName\": \"\",\n  \"department\": \"\",\n  \"owner\": \"\",\n  \"status\": \"\",\n  \"riskLevel\": \"\",\n  \"priority\": \"\",\n  \"issue\": \"\",\n  \"impact\": \"\",\n  \"rootCause\": \"\",\n  \"recommendedActions\": [],\n  \"escalationRequired\": false,\n  \"escalationReason\": \"\",\n  \"deadline\": \"\",\n  \"summary\": \"\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "bfa1a566-bf2f-4b63-b070-cc7cef8aaa30",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        544,
+        208
+      ],
+      "id": "360939b0-d65e-4c2d-b3c9-ddc7cc079c56",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "edJAzo9yaNKu0gXa",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.riskLevel }}",
+                    "rightValue": "LOW",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "a5c8aaff-207f-4a30-809b-cd6b8b7f2745"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "334cc7d5-b3c4-416d-985f-248994dc4899",
+                    "leftValue": "={{ $json.riskLevel }}",
+                    "rightValue": "MEDIUM",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "23eec2be-05cd-46bd-af3d-78ac2bcbc6a9",
+                    "leftValue": "={{ $json.riskLevel }}",
+                    "rightValue": "HIGH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "eb65f21e-5a6c-411f-949d-85facafeab88",
+                    "leftValue": "={{ $json.riskLevel }}",
+                    "rightValue": "CRITICAL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        0
+      ],
+      "id": "353f6bba-7656-406d-8c05-30c0f4c37b81",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $json.output;\n\nlet data;\n\ntry {\n  data = typeof output === 'string'\n    ? JSON.parse(output)\n    : output;\n} catch (error) {\n  throw new Error('AI output is not valid JSON: ' + error.message);\n}\n\nreturn [\n  {\n    json: data\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        0
+      ],
+      "id": "0bfede23-fd4a-427f-9d8c-940f8bb0c222",
+      "name": "Parse AI Operations Result"
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=⚠️ HIGH OPERATIONAL ALERT  Operation: {{ $json.operationName }}  Operation ID: {{ $json.operationId }}  Department: {{ $json.department }}  Status: {{ $json.status }}  Risk Level: {{ $json.riskLevel }}  Priority: {{ $json.priority }}  ⚠️ Issue: {{ $json.issue }}  Impact: {{ $json.impact }}  Recommended Actions: {{ $json.recommendedActions.join('\\n• ') }}  Owner: {{ $json.owner }}  Deadline: {{ $json.deadline }}  Escalation Required: {{ $json.escalationRequired }}  Summary: {{ $json.summary⚠️ HIGH OPERATIONAL ALERT\n\nOperation: {{ $json.operationName }}\n\nOperation ID: {{ $json.operationId }}\n\nDepartment: {{ $json.department }}\n\nStatus: {{ $json.status }}\n\nRisk Level: {{ $json.riskLevel }}\n\nPriority: {{ $json.priority }}\n\n⚠️ Issue:\n{{ $json.issue }}\n\nImpact:\n{{ $json.impact }}\n\nRecommended Actions:\n{{ $json.recommendedActions.join('\\n• ') }}\n\nOwner:\n{{ $json.owner }}\n\nDeadline:\n{{ $json.deadline }}\n\nEscalation Required:\n{{ $json.escalationRequired }}\n\nSummary:\n{{ $json.summary }} }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1744,
+        144
+      ],
+      "id": "44c0f1f7-6526-4362-aa4e-09d2ef4bfd5f",
+      "name": "Send a text message",
+      "webhookId": "05ad1ee5-3a81-4386-908f-de0a32ac6139",
+      "credentials": {
+        "telegramApi": {
+          "id": "gE8oIDM83A08d9M2",
+          "name": "aicyber"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=🚨 CRITICAL OPERATIONAL ALERT  Operation: {{ $json.operationName }}  Operation ID: {{ $json.operationId }}  Department: {{ $json.department }}  Status: {{ $json.status }}  Risk Level: {{ $json.riskLevel }}  Priority: {{ $json.priority }}  ⚠️ Issue: {{ $json.issue }}  💥 Impact: {{ $json.impact }}  🔍 Root Cause: {{ $json.rootCause }}  👤 Owner: {{ $json.owner }}  ⏰ Deadline: {{ $json.deadline }}  🚨 Escalation Required: {{ $json.escalationRequired }}  Reason: {{ $json.escalationReason }}  ✅ Recommended Actions: {{ $json.recommendedActions.join('\\n• ') }}  📋 Summary: {{ $json.summary }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1408,
+        208
+      ],
+      "id": "a98c89ea-b566-4ada-817e-5e897f5289ea",
+      "name": "Send a text message1",
+      "webhookId": "74940501-fa64-4206-9594-b753150f4a58",
+      "credentials": {
+        "telegramApi": {
+          "id": "gE8oIDM83A08d9M2",
+          "name": "aicyber"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=🟡 MEDIUM OPERATIONAL ALERT  Operation: {{ $json.operationName }}  Operation ID: {{ $json.operationId }}  Department: {{ $json.department }}  Status: {{ $json.status }}  Risk Level: {{ $json.riskLevel }}  Priority: {{ $json.priority }}  Issue: {{ $json.issue }}  Impact: {{ $json.impact }}  Recommended Actions: {{ $json.recommendedActions.join('\\n• ') }}  Owner: {{ $json.owner }}  Deadline: {{ $json.deadline }}  Summary: {{ $json.summary }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1728,
+        0
+      ],
+      "id": "9f9204cd-54d5-451f-ab1b-aee78dac0201",
+      "name": "Send a text message2",
+      "webhookId": "c673ee1c-5722-4768-b551-5b3b68a55074",
+      "credentials": {
+        "telegramApi": {
+          "id": "gE8oIDM83A08d9M2",
+          "name": "aicyber"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6424720049",
+        "text": "=ℹ️ LOW OPERATIONAL STATUS  Operation: {{ $json.operationName }}  Operation ID: {{ $json.operationId }}  Department: {{ $json.department }}  Status: {{ $json.status }}  Risk Level: {{ $json.riskLevel }}  Priority: {{ $json.priority }}  Summary: {{ $json.summary }}  Owner: {{ $json.owner }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1616,
+        -186.375
+      ],
+      "id": "5464a81b-458b-4f8b-9851-9c02ace6491b",
+      "name": "Send a text message3",
+      "webhookId": "029813f7-4226-4176-ad96-2b3492479210",
+      "credentials": {
+        "telegramApi": {
+          "id": "gE8oIDM83A08d9M2",
+          "name": "aicyber"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Normalize the data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize the data": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Operations Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Operations Result": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "23522369-ae1c-47b6-a5f9-111ddb2bfd44",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2a6c94329da39b9d4451f3c0115755415c2cb6268df113ca59ea95f0f2d3e0e"
+  },
+  "nodeGroups": [],
+  "id": "iVQXu075v20Aifso",
+  "tags": []
+}
